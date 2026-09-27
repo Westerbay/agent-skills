@@ -6,6 +6,10 @@ IDs start with a letter and contain letters, digits, hyphens or underscores; ite
 unique across a document. Prose is plain text, with newlines for paragraphs. Do not encode
 HTML, CSS, layout, duplicated counters or a hand-maintained task graph in JSON.
 
+Prose may contain inline LaTeX `\(...\)` or display LaTeX `\[...\]` / `$$...$$`.
+Escape backslashes in JSON strings, for example `"\\(\\frac{a}{b}\\)"`.
+The renderer displays formulas offline; code blocks and diagram source remain literal.
+
 Optional common fields: `goals`, `users`, `outOfScope`, `successMetrics` (string arrays),
 `preDraft: {reuse: string[], sharedSurfaces: string[], sourcePriority: string[]}`.
 Keep useful narrative; optional sections need not be filled ceremonially.

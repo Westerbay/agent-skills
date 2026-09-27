@@ -44,6 +44,24 @@ JSON is a preview, not a filesystem save or approval. Imported Mermaid remains v
 as source until compiled with `render`. Design skills are needed to change the shared
 template, not to produce each PRD. Examples live in `examples/`.
 
+## Copy as image and mathematical formulas
+
+Use **Copy as image** in the HTML toolbar to copy the complete document as a PNG,
+including expanded task details and formulas. Copying includes the full source
+document even when search filters the visible view. It preserves the current theme
+and does not change the visible document. If clipboard access is unavailable or
+denied, the reader downloads a PNG instead and reports that outcome. Very large
+documents remain subject to the browser's canvas limits.
+
+Write inline LaTeX as `\(a^2 + b^2 = c^2\)` and display formulas as
+`\[\frac{a}{b}\]` or `$$\sum_{i=1}^{n} i$$` in prose fields, including array items.
+In JSON strings, escape backslashes: `"Cost: \\(\\frac{a}{b}\\)"`.
+KaTeX produces native MathML bundled into the standalone HTML, with no CDN or
+network fonts. Modern browsers render the formulas offline and expose mathematical
+structure to assistive technology. Code and diagram source blocks remain literal;
+single dollar signs remain ordinary text. Invalid formulas stay visible, and math
+commands cannot execute HTML or load remote content.
+
 ## Execution and handoff
 
 For build-feature, use [references/execution.md](references/execution.md). Preserve the

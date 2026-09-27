@@ -52,6 +52,8 @@ Use English [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0
 
 For your own Codex installation, initially published skills already exist locally. Keep any local changes before replacing those copies with an installation from this repository.
 
+The [AGENTS.md](AGENTS.md) file includes portable agent instructions and this repository's conventions. `build-feature` planning HTML supports offline LaTeX formulas and a **Copy as image** action, with a PNG download fallback when the clipboard is unavailable. See the [document guide](skills/build-feature/modules/prd/GUIDE.md).
+
 ## License
 
 Original content is available under the [MIT license](LICENSE). Bundled third-party assets retain their own licenses; see [third-party notices](skills/build-feature/modules/prd/THIRD_PARTY_NOTICES.txt).

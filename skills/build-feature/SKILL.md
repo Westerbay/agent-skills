@@ -17,6 +17,10 @@ when their phase applies. Node.js 22+ runs the document tools; Python 3.10+ and 
 the review helpers. Technical diagram compilation optionally needs the pinned npm
 dependencies and Chrome/Chromium; see [document setup](modules/prd/GUIDE.md).
 
+Generated planning documents support copying the complete rendered document as a PNG
+image and displaying LaTeX formulas offline. Use the documented math delimiters in
+prose; keep source JSON authoritative. See [document setup](modules/prd/GUIDE.md).
+
 Use the user's language in conversation. Repository instructions and explicit user
 choices take precedence over style preferences. Use the actual repository tools and
 available agent capabilities, without hardcoded model names or vendor APIs.

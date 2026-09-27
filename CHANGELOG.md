@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.0 — 2026-09-27
+
+- Publish portable AGENTS.md instructions alongside repository conventions.
+- Add complete-document PNG clipboard copying with a download fallback.
+- Render inline and display LaTeX formulas offline using KaTeX and native MathML.
+
 ## 0.1.1 — 2026-09-27
 
 - Translate React/TypeScript guidance, skill metadata and planning examples into English.

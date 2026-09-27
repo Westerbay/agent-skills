@@ -11,6 +11,8 @@ const ajv = new Ajv({allErrors: true, strictRequired: false, code: {source: true
 await build({stdin: {contents: standaloneCode(ajv, ajv.compile(schema)), resolveDir: root},
   bundle: true, minify: true, platform: 'neutral', format: 'cjs', outfile: `${root}assets/validate.cjs`});
 if (!process.argv.includes('--schema-only')) {
+  await build({stdin: {contents: "module.exports = require('katex');", resolveDir: root},
+    bundle: true, minify: true, platform: 'neutral', format: 'cjs', outfile: `${root}assets/math.cjs`});
   await build({entryPoints: [`${root}scripts/reader.mjs`], bundle: true, minify: true,
     platform: 'browser', format: 'iife', outfile: `${root}assets/reader.js`});
   await build({stdin: {contents: "import mermaid from 'mermaid'; window.featureMermaid = mermaid;", resolveDir: root},
