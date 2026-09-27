@@ -1,0 +1,93 @@
+{
+  "schemaVersion": 1,
+  "kind": "tech-plan",
+  "id": "feature-documents-plan",
+  "revision": "1",
+  "title": "Une chaîne documentaire réutilisable",
+  "summary": "Les décisions techniques derrière un PRD structuré, un lecteur autonome et un contexte réduit pour chaque tâche.",
+  "locale": "fr",
+  "constraints": [
+    "Aucun service hébergé requis pour lire un document.",
+    "Aucun commit, push ou publication automatique.",
+    "Les vérifications prévues ne sont jamais présentées comme des résultats."
+  ],
+  "entries": [
+    {
+      "id": "CTX-001",
+      "kind": "current",
+      "title": "Une source, plusieurs lectures",
+      "body": "Les spécifications sont aujourd’hui décrites en Markdown puis converties en HTML. Les dépendances et les tableaux de traçabilité sont entretenus séparément. Le nouveau moteur produit ces vues à partir des données structurées.",
+      "global": false,
+      "refs": []
+    },
+    {
+      "id": "DEC-001",
+      "kind": "decision",
+      "title": "Séparer le fond de sa présentation",
+      "body": "Le modèle écrit les exigences, les décisions et les tâches dans un JSON versionné. Le moteur possède la structure, les composants et les règles de rendu. Le document HTML embarque ses données et fonctionne hors ligne.",
+      "alternative": "Conserver Markdown et améliorer uniquement la feuille de style. Cette option change peu l’extraction ciblée et la validation des références.",
+      "consequences": "Le schéma doit rester assez souple pour les explications métier. Une nouvelle version du schéma exige une migration explicite.",
+      "global": true,
+      "refs": []
+    },
+    {
+      "id": "CTR-001",
+      "kind": "contract",
+      "title": "Le contenu approuvé reste identifiable",
+      "body": "Une empreinte SHA-256 du JSON canonique rattache les preuves à la version exacte du PRD. Modifier les exigences rend l’ancien registre d’exécution périmé, même si le numéro de révision n’a pas été changé.",
+      "global": true,
+      "refs": [
+        "DEC-001"
+      ]
+    },
+    {
+      "id": "CTR-002",
+      "kind": "contract",
+      "title": "Des données, jamais des instructions exécutées",
+      "body": "Le contenu est affiché comme du texte. Les commandes de seed et de validation sont des consignes à examiner, jamais des scripts exécutés par le lecteur. Les liens internes utilisent des identifiants validés.",
+      "global": true,
+      "refs": []
+    },
+    {
+      "id": "FLOW-001",
+      "kind": "flow",
+      "title": "Du JSON au document consultable",
+      "body": "La validation précède le rendu. Le HTML contient la vue lisible et le JSON source. Les agents consomment un extrait dérivé sans devoir ouvrir le lecteur.",
+      "diagram": "flowchart LR\n  A[JSON source] --> B[Validation]\n  B --> C[HTML autonome]\n  B --> D[Contexte de tâche]\n  E[Résultats séparés] --> C",
+      "global": false,
+      "refs": [
+        "CTR-001",
+        "CTR-002"
+      ]
+    },
+    {
+      "id": "CALC-001",
+      "kind": "calculation",
+      "title": "Calculer les tâches prêtes",
+      "body": "Une tâche est prête lorsque toutes ses dépendances sont terminées et que les trois validations ont été enregistrées. Une tâche de code déjà engagée conserve la priorité jusqu’à sa livraison locale ou sa PR/MR. Les tâches de recette restent destinées à une personne.",
+      "example": "CODE-002 dépend de CODE-001. Tant que CODE-001 attend sa review ou sa livraison, CODE-002 ne peut pas démarrer.",
+      "global": false,
+      "refs": [
+        "CTR-001"
+      ]
+    },
+    {
+      "id": "DEC-002",
+      "kind": "decision",
+      "title": "Préparer les PR sans publier",
+      "body": "Le helper capture le diff et sa base exacte. Le modèle explique le changement à partir de cette capture. Un contrôle final détecte une branche modifiée ou des documents de planning inclus avant toute publication autorisée.",
+      "global": false,
+      "refs": [
+        "CTR-002"
+      ]
+    },
+    {
+      "id": "OPS-001",
+      "kind": "rollout",
+      "title": "Installer une version vérifiée",
+      "body": "Tester le moteur et les scripts dans une copie locale. Conserver une sauvegarde des fichiers précédents et vérifier qu’ils n’ont pas changé avant de les remplacer. Les anciens documents HTML restent consultables.",
+      "global": false,
+      "refs": []
+    }
+  ]
+}

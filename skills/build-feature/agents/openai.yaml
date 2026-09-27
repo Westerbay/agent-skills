@@ -1,0 +1,4 @@
+interface:
+  display_name: "Build Feature"
+  short_description: "Scope, design, build, review, and deliver a feature"
+  default_prompt: "Use $build-feature to scope, architect, document, implement, review, and deliver this feature using the chosen local or PR/MR workflow."

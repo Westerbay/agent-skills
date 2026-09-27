@@ -1,0 +1,23 @@
+name: Validate skills
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: node scripts/validate-skills.mjs
+      - run: node --test skills/build-feature/modules/prd/tests/*.test.mjs
+      - run: python -m unittest discover -s skills/build-feature/modules/review/tests -p 'test_*.py'

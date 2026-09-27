@@ -1,0 +1,4 @@
+interface:
+  display_name: "Software Developer"
+  short_description: "Code clair, responsabilités ciblées et types sûrs"
+  default_prompt: "Utilise $software-developer pour implémenter ou refactoriser cette fonctionnalité avec des responsabilités ciblées, des handlers nommés et une configuration explicite."
