@@ -34,13 +34,17 @@ test('technical plan has an explicit offline diagram-source fallback',async()=>{
   const dir=await mkdtemp(join(tmpdir(),'feature-doc-diagrams-'));
   const root=fileURLToPath(new URL('../',import.meta.url));
   try {
-    const source=join(root,'examples/reader.tech-plan.json');
-    const out=join(dir,'plan.html');
-    const result=execFileSync(process.execPath,[join(root,'scripts/prd.mjs'),'render',source,'--diagram-source','--out',out],{encoding:'utf8'});
-    assert.match(JSON.parse(result).warnings.join(' '),/SVG compilation/);
-    const html=await readFile(out,'utf8');
-    assert.match(html,/flowchart LR/);
-    assert.match(html,/Diagramme présenté en source/);
+    const doc=JSON.parse(await readFile(join(root,'examples/reader.tech-plan.json'),'utf8'));
+    for(const [locale,label] of [['en','Diagram shown as source'],['fr','Diagramme présenté en source']]) {
+      const source=join(dir,`plan-${locale}.json`),out=join(dir,`plan-${locale}.html`);
+      await writeFile(source,JSON.stringify({...doc,locale}));
+      const result=execFileSync(process.execPath,[join(root,'scripts/prd.mjs'),'render',source,'--diagram-source','--out',out],{encoding:'utf8'});
+      assert.match(JSON.parse(result).warnings.join(' '),/SVG compilation/);
+      const html=await readFile(out,'utf8');
+      assert.ok(html.includes('flowchart LR'));
+      assert.ok(html.includes(label),`Missing ${locale} diagram fallback label`);
+      assert.ok(html.includes(`lang="${locale}"`));
+    }
   }finally{await rm(dir,{recursive:true,force:true});}
 });
 
@@ -65,7 +69,7 @@ test('CLI local checkpoint persists, releases dependent work and renders the del
     const out=join(dir,'result.html');
     cli('render','--out',out);
     const html=await readFile(out,'utf8');
-    assert.match(html,/Livré localement/);
+    assert.ok(html.includes('Delivered locally'));
     assert.ok(!html.includes('>delivered-local<'));
   }finally{await rm(dir,{recursive:true,force:true});}
 });

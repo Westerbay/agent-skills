@@ -1,4 +1,4 @@
 interface:
   display_name: "Software Developer"
-  short_description: "Code clair, responsabilités ciblées et types sûrs"
-  default_prompt: "Utilise $software-developer pour implémenter ou refactoriser cette fonctionnalité avec des responsabilités ciblées, des handlers nommés et une configuration explicite."
+  short_description: "Clear code, focused responsibilities and safe types"
+  default_prompt: "Use $software-developer to implement or refactor this feature with focused responsibilities, named handlers and explicit configuration."

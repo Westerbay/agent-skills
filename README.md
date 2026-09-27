@@ -34,6 +34,8 @@ Updates are explicit: a GitHub push does not automatically update installed copi
 
 These skills use the tools available to the agent and fall back to sequential work when independent agents are unavailable. `build-feature` requires Node.js 22+ for its document tools and Python 3.10+ and Git for its review helpers. Optional diagram compilation requires additional dependencies and Chrome/Chromium; see the [document guide](skills/build-feature/modules/prd/GUIDE.md).
 
+Instructions, metadata and examples are written in English. Agents should still use the user's requested language in conversation; the document renderer supports English and French.
+
 ## Maintain this repository
 
 Treat `skills/` in this checkout as the source of truth. Edit the relevant `SKILL.md`, references or scripts here, validate the changes, update [CHANGELOG.md](CHANGELOG.md), and commit and push to GitHub. Do not edit an installed copy and expect those edits to reach this repository.
@@ -45,6 +47,8 @@ python -m unittest discover -s skills/build-feature/modules/review/tests -p "tes
 ```
 
 The validation workflow runs these checks on pushes and pull requests. Each new skill belongs in `skills/<name>/`, with a `SKILL.md` containing `name` and `description` in YAML front matter. Bundle its required references, scripts and assets and use relative paths.
+
+Use English [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) in the form `type(scope): summary`, for example `docs(skills): clarify TDD and reuse scouting` or `fix(build-feature): preserve task dependencies`. Use `feat` for new capabilities, `fix` for defects, `docs` for documentation, `test` for tests, and `ci` for workflow changes. The initial publication commit predates this convention; preserve published history.
 
 For your own Codex installation, initially published skills already exist locally. Keep any local changes before replacing those copies with an installation from this repository.
 

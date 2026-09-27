@@ -4,107 +4,107 @@
   "profile": "implementation",
   "id": "feature-documents",
   "revision": "1",
-  "title": "Des spécifications qui se lisent et s’exécutent",
-  "summary": "Un JSON pour exprimer le besoin. Un document soigné pour le comprendre. Un contexte ciblé pour livrer chaque tâche.",
-  "locale": "fr",
+  "title": "Specifications for reading and execution",
+  "summary": "JSON expresses the requirements. A readable document explains them. Focused context supports delivery of each task.",
+  "locale": "en",
   "techPlan": {
     "id": "feature-documents-plan",
     "revision": "1"
   },
   "goals": [
-    "Réduire la rédaction et la relecture de structures répétitives.",
-    "Rendre les décisions, les exigences et leurs preuves faciles à retrouver."
+    "Reduce writing and review of repetitive structures.",
+    "Make decisions, requirements and their evidence easy to find."
   ],
   "users": [
-    "Mathis, pour relire et approuver une fonctionnalité.",
-    "Les agents, pour implémenter une tâche avec le contexte utile."
+    "Feature owners reviewing and approving a feature.",
+    "Agents implementing a task with the relevant context."
   ],
   "outOfScope": [
-    "Un éditeur collaboratif hébergé.",
-    "Une publication ou un déploiement automatique."
+    "A hosted collaborative editor.",
+    "Automatic publication or deployment."
   ],
   "constraints": [
-    "Aucun service hébergé requis pour lire un document.",
-    "Aucun commit, push ou publication automatique.",
-    "Les vérifications prévues ne sont jamais présentées comme des résultats."
+    "Reading a document requires no hosted service.",
+    "No automatic commits, pushes or publication.",
+    "Planned checks are never presented as observed results."
   ],
   "requirements": [
     {
       "id": "FR-001",
       "kind": "functional",
-      "title": "Un document autonome",
-      "description": "Ouvrir le PRD depuis un fichier local, sans serveur ni accès réseau.",
+      "title": "A standalone document",
+      "description": "Open the PRD from a local file without a server or network access.",
       "priority": "must",
       "acceptance": [
-        "Le texte et les diagrammes restent lisibles hors ligne.",
-        "La navigation fonctionne au clavier."
+        "Text and diagrams remain readable offline.",
+        "Navigation works with the keyboard."
       ]
     },
     {
       "id": "FR-002",
       "kind": "functional",
-      "title": "Un JSON comme seule source",
-      "description": "Générer les titres, les références et les dépendances sans écrire un second document.",
+      "title": "JSON as the single source",
+      "description": "Generate headings, references and dependencies without writing a second document.",
       "priority": "must",
       "acceptance": [
-        "Aucun fichier prd.md requis.",
-        "Les références inconnues et les cycles sont refusés."
+        "No prd.md file is required.",
+        "Unknown references and cycles are rejected."
       ]
     },
     {
       "id": "FR-003",
       "kind": "functional",
-      "title": "Le bon contexte pour chaque tâche",
-      "description": "Extraire les exigences et les contrats nécessaires à une seule tâche.",
+      "title": "Relevant context for each task",
+      "description": "Extract the requirements and contracts needed for a single task.",
       "priority": "must",
       "acceptance": [
-        "Les contraintes globales sont conservées.",
-        "Les références techniques transitives sont incluses."
+        "Global constraints are preserved.",
+        "Transitive technical references are included."
       ]
     },
     {
       "id": "FR-004",
       "kind": "functional",
-      "title": "Des preuves séparées du plan",
-      "description": "Rattacher les résultats observés à la révision exacte approuvée.",
+      "title": "Evidence separate from the plan",
+      "description": "Attach observed results to the exact approved revision.",
       "priority": "must",
       "acceptance": [
-        "Un PRD modifié invalide le registre précédent.",
-        "Une vérification non exécutée reste marquée comme prévue."
+        "An edited PRD invalidates the previous execution record.",
+        "A check that has not run remains marked as planned."
       ]
     },
     {
       "id": "FR-005",
       "kind": "functional",
-      "title": "Des PR préparées de façon reproductible",
-      "description": "Collecter le diff, remplir le template et vérifier le périmètre avant publication.",
+      "title": "Reproducible pull request preparation",
+      "description": "Collect the diff, fill in the template and check scope before publication.",
       "priority": "must",
       "acceptance": [
-        "Les tests sans preuve ne sont pas déclarés réussis.",
-        "Les documents de planning sont détectés avant publication."
+        "Tests without evidence are not reported as passing.",
+        "Planning documents are detected before publication."
       ]
     },
     {
       "id": "FR-006",
       "kind": "functional",
-      "title": "Une mécanique de review fiable",
-      "description": "Préparer le diff une fois et agréger les réponses structurées des reviewers.",
+      "title": "Reliable review mechanics",
+      "description": "Prepare the diff once and aggregate structured reviewer responses.",
       "priority": "must",
       "acceptance": [
-        "Une réponse absente ou mal formée reste visible.",
-        "Les lignes hors diff ne sont pas présentées comme des commentaires ancrés."
+        "A missing or malformed response remains visible.",
+        "Lines outside the diff are not presented as anchored comments."
       ]
     },
     {
       "id": "NFR-001",
       "kind": "non-functional",
-      "title": "Une lecture accessible et confortable",
-      "description": "Le lecteur s’adapte à un écran étroit et à l’impression. Les commandes ont un focus visible et le contenu ne dépend pas d’animations.",
+      "title": "Accessible and comfortable reading",
+      "description": "The reader adapts to narrow screens and printing. Controls have visible focus and content does not depend on animation.",
       "priority": "must",
       "acceptance": [
-        "Pas de débordement horizontal de page à 375 px.",
-        "Le texte reste lisible avec un zoom à 200 %.",
-        "L’impression inclut les détails repliés."
+        "No horizontal page overflow at 375 px.",
+        "Text remains readable at 200% zoom.",
+        "Printing includes collapsed details."
       ]
     }
   ],
@@ -112,8 +112,8 @@
     {
       "id": "CODE-001",
       "kind": "code",
-      "title": "Définir le contrat documentaire",
-      "goal": "Valider les identifiants, les références et le graphe. ",
+      "title": "Define the document contract",
+      "goal": "Validate identifiers, references and the graph.",
       "dependsOn": [],
       "requirementIds": [
         "FR-002"
@@ -126,15 +126,15 @@
         "scripts/document-model.mjs"
       ],
       "validation": [
-        "Exercer un cycle et une référence inconnue."
+        "Exercise a cycle and an unknown reference."
       ],
       "seedIds": []
     },
     {
       "id": "CODE-002",
       "kind": "code",
-      "title": "Construire le lecteur HTML",
-      "goal": "Produire une vue autonome et accessible.",
+      "title": "Build the HTML reader",
+      "goal": "Produce a standalone, accessible view.",
       "dependsOn": [
         "CODE-001"
       ],
@@ -151,15 +151,15 @@
         "scripts/reader.mjs"
       ],
       "validation": [
-        "Ouvrir hors ligne, naviguer au clavier et imprimer."
+        "Open offline, navigate with the keyboard and print."
       ],
       "seedIds": []
     },
     {
       "id": "CODE-003",
       "kind": "code",
-      "title": "Extraire le contexte et suivre les preuves",
-      "goal": "Relier les extraits et résultats aux documents sources.",
+      "title": "Extract context and track evidence",
+      "goal": "Link excerpts and results to source documents.",
       "dependsOn": [
         "CODE-001"
       ],
@@ -175,16 +175,16 @@
         "scripts/prd.mjs"
       ],
       "validation": [
-        "Refuser un plan technique périmé.",
-        "Conserver les références transitives."
+        "Reject a stale technical plan.",
+        "Preserve transitive references."
       ],
       "seedIds": []
     },
     {
       "id": "CODE-004",
       "kind": "code",
-      "title": "Automatiser la préparation des PR",
-      "goal": "Construire une description depuis un contexte Git figé.",
+      "title": "Automate pull request preparation",
+      "goal": "Build a description from a fixed Git snapshot.",
       "dependsOn": [
         "CODE-003"
       ],
@@ -198,15 +198,15 @@
         "draft-pr/scripts/"
       ],
       "validation": [
-        "Utiliser un dépôt temporaire avec branche empilée."
+        "Use a temporary repository with a stacked branch."
       ],
       "seedIds": []
     },
     {
       "id": "CODE-005",
       "kind": "code",
-      "title": "Automatiser la mécanique Argus",
-      "goal": "Valider et agréger sans masquer les erreurs.",
+      "title": "Automate Argus review mechanics",
+      "goal": "Validate and aggregate without hiding errors.",
       "dependsOn": [
         "CODE-004"
       ],
@@ -220,14 +220,14 @@
         "argus-review/scripts/"
       ],
       "validation": [
-        "Exercer une réponse manquante et une ligne hors diff."
+        "Exercise a missing response and a line outside the diff."
       ],
       "seedIds": []
     },
     {
       "id": "QA-001",
       "kind": "human-qa",
-      "title": "Relire le document de bout en bout",
+      "title": "Review the document end to end",
       "dependsOn": [
         "CODE-002",
         "CODE-003",
@@ -241,12 +241,12 @@
       "planRefs": [],
       "seedIds": [],
       "steps": [
-        "Ouvrir le HTML sur un ordinateur puis sur un écran étroit.",
-        "Suivre une exigence vers sa tâche et sa vérification.",
-        "Passer en thème sombre, puis imprimer."
+        "Open the HTML on a desktop and then on a narrow screen.",
+        "Follow a requirement to its task and check.",
+        "Switch to the dark theme, then print."
       ],
-      "expected": "Le document reste compréhensible sans connaître sa structure JSON.",
-      "cleanup": "Fermer les fichiers de démonstration."
+      "expected": "The document remains understandable without knowing its JSON structure.",
+      "cleanup": "Close the demonstration files."
     }
   ],
   "checks": [
@@ -255,9 +255,9 @@
       "requirementIds": [
         "FR-001"
       ],
-      "scenario": "Le texte et les diagrammes restent lisibles hors ligne.",
+      "scenario": "Text and diagrams remain readable offline.",
       "route": "runtime",
-      "expected": "La navigation fonctionne au clavier.",
+      "expected": "Navigation works with the keyboard.",
       "seedIds": []
     },
     {
@@ -265,9 +265,9 @@
       "requirementIds": [
         "FR-002"
       ],
-      "scenario": "Aucun fichier prd.md requis.",
+      "scenario": "No prd.md file is required.",
       "route": "runtime",
-      "expected": "Les références inconnues et les cycles sont refusés.",
+      "expected": "Unknown references and cycles are rejected.",
       "seedIds": []
     },
     {
@@ -275,9 +275,9 @@
       "requirementIds": [
         "FR-003"
       ],
-      "scenario": "Les contraintes globales sont conservées.",
+      "scenario": "Global constraints are preserved.",
       "route": "runtime",
-      "expected": "Les références techniques transitives sont incluses.",
+      "expected": "Transitive technical references are included.",
       "seedIds": []
     },
     {
@@ -285,9 +285,9 @@
       "requirementIds": [
         "FR-004"
       ],
-      "scenario": "Un PRD modifié invalide le registre précédent.",
+      "scenario": "An edited PRD invalidates the previous execution record.",
       "route": "runtime",
-      "expected": "Une vérification non exécutée reste marquée comme prévue.",
+      "expected": "A check that has not run remains marked as planned.",
       "seedIds": []
     },
     {
@@ -295,9 +295,9 @@
       "requirementIds": [
         "FR-005"
       ],
-      "scenario": "Les tests sans preuve ne sont pas déclarés réussis.",
+      "scenario": "Tests without evidence are not reported as passing.",
       "route": "runtime",
-      "expected": "Les documents de planning sont détectés avant publication.",
+      "expected": "Planning documents are detected before publication.",
       "seedIds": []
     },
     {
@@ -305,9 +305,9 @@
       "requirementIds": [
         "FR-006"
       ],
-      "scenario": "Une réponse absente ou mal formée reste visible.",
+      "scenario": "A missing or malformed response remains visible.",
       "route": "runtime",
-      "expected": "Les lignes hors diff ne sont pas présentées comme des commentaires ancrés.",
+      "expected": "Lines outside the diff are not presented as anchored comments.",
       "seedIds": []
     },
     {
@@ -315,9 +315,9 @@
       "requirementIds": [
         "NFR-001"
       ],
-      "scenario": "Pas de débordement horizontal de page à 375 px.",
+      "scenario": "No horizontal page overflow at 375 px.",
       "route": "manual",
-      "expected": "L’impression inclut les détails repliés.",
+      "expected": "Printing includes collapsed details.",
       "seedIds": []
     }
   ],
@@ -326,14 +326,14 @@
     {
       "id": "RISK-001",
       "kind": "risk",
-      "description": "Un schéma trop détaillé pourrait augmenter le volume de rédaction.",
-      "mitigation": "Garder les explications en prose et mesurer les extraits sur un cas représentatif.",
+      "description": "An overly detailed schema could increase the amount of writing.",
+      "mitigation": "Keep explanations in prose and measure excerpts on a representative case.",
       "status": "open"
     },
     {
       "id": "NOTE-001",
       "kind": "assumption",
-      "description": "Ce document est un exemple de rendu. Les vérifications affichées sont prévues, pas des résultats de livraison.",
+      "description": "This document demonstrates rendering. Displayed checks are planned checks, not delivery results.",
       "status": "open"
     }
   ]
