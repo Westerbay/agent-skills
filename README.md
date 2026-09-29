@@ -32,6 +32,14 @@ npx skills update --global
 
 Updates are explicit: a GitHub push does not automatically update installed copies.
 
+Installing the skill copies its files; it does not install the optional diagram runtime.
+For automatic SVG diagrams, run `npm ci --ignore-scripts` once in the installed
+`build-feature/modules/prd` directory and make Chrome available. Use a persistent
+writable copy of that module when the skill directory is read-only, and repeat setup
+after updates that replace it. Each compiled SVG has a button to copy that diagram
+as a PNG. Plain document rendering uses bundled assets without the optional diagram
+runtime. See the [document guide](skills/build-feature/modules/prd/GUIDE.md).
+
 These skills use the tools available to the agent and fall back to sequential work when independent agents are unavailable. `build-feature` requires Node.js 22+ for its document tools and Python 3.10+ and Git for its review helpers. Optional diagram compilation requires additional dependencies and Chrome/Chromium; see the [document guide](skills/build-feature/modules/prd/GUIDE.md).
 
 Instructions, metadata and examples are written in English. Agents should still use the user's requested language in conversation; the document renderer supports English and French.
@@ -52,7 +60,7 @@ Use English [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0
 
 For your own Codex installation, initially published skills already exist locally. Keep any local changes before replacing those copies with an installation from this repository.
 
-The [AGENTS.md](AGENTS.md) file includes portable agent instructions and this repository's conventions. `build-feature` planning HTML supports offline LaTeX formulas and a **Copy as image** action, with a PNG download fallback when the clipboard is unavailable. See the [document guide](skills/build-feature/modules/prd/GUIDE.md).
+The [AGENTS.md](AGENTS.md) file includes portable agent instructions and this repository's conventions. `build-feature` planning HTML supports offline LaTeX formulas and a per-diagram **Copy diagram as image** action, with a PNG download fallback when the clipboard is unavailable. See the [document guide](skills/build-feature/modules/prd/GUIDE.md).
 
 ## License
 

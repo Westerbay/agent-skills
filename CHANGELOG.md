@@ -1,9 +1,17 @@
 # Changelog
 
+## Unreleased
+
+- Replace whole-document PNG copying with a copy button for each compiled SVG diagram.
+- Check diagram runtime prerequisites before rendering, reuse persistent installations,
+  and disclose source-only fallbacks alongside document links.
+- Explain locked dependency setup when SVG compilation cannot load `playwright-core`,
+  preserving any previously rendered HTML.
+
 ## 0.2.0 — 2026-09-27
 
 - Publish portable AGENTS.md instructions alongside repository conventions.
-- Add complete-document PNG clipboard copying with a download fallback.
+- Add PNG clipboard copying with a download fallback (replaced by per-diagram copying in the next update).
 - Render inline and display LaTeX formulas offline using KaTeX and native MathML.
 
 ## 0.1.1 — 2026-09-27

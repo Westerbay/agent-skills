@@ -1,6 +1,6 @@
 import {validateDocument} from './document-model.mjs';
 import {renderDocument, copy} from './document-view.mjs';
-import {documentImage, downloadImage} from './image-export.mjs';
+import {diagramImage, downloadImage} from './diagram-image.mjs';
 
 let payload=JSON.parse(document.getElementById('document-data').textContent);
 let expanded=false;
@@ -24,27 +24,29 @@ function bind() {
     document.getElementById('theme').setAttribute('aria-pressed',String(dark));
   };
   document.getElementById('print').onclick=()=>window.print();
-  document.getElementById('copy-image').onclick=async event=>{
-    const button=event.currentTarget;
-    const status=document.getElementById('reader-status');
-    button.disabled=true;status.textContent=t.imagePending;
-    // Start the clipboard write within the click gesture, before rasterization finishes.
-    const image=documentImage(payload);
-    try {
-      if(!navigator.clipboard?.write || !window.ClipboardItem)throw new Error('Clipboard unavailable');
-      await navigator.clipboard.write([new ClipboardItem({'image/png':image})]);
-      status.textContent=t.imageCopied;
-    } catch(error) {
+  document.querySelectorAll('.diagram-copy').forEach(button=>{
+    button.onclick=async()=>{
+      const status=document.getElementById('reader-status');
+      const svg=button.closest('.diagram').querySelector('svg');
+      button.disabled=true;status.textContent=t.imagePending;
+      // Start the clipboard write within the click gesture, before rasterization finishes.
+      const image=diagramImage(svg);
       try {
-        downloadImage(await image,payload.document.id);
-        status.textContent=t.imageDownloaded;
-      } catch(imageError) {
-        status.textContent=`${t.imageFailed} ${imageError.message}`;
+        if(!navigator.clipboard?.write || !window.ClipboardItem)throw new Error('Clipboard unavailable');
+        await navigator.clipboard.write([new ClipboardItem({'image/png':image})]);
+        status.textContent=t.imageCopied;
+      } catch(error) {
+        try {
+          downloadImage(await image,button.dataset.diagramId);
+          status.textContent=t.imageDownloaded;
+        } catch(imageError) {
+          status.textContent=`${t.imageFailed} ${imageError.message}`;
+        }
+      } finally {
+        button.disabled=false;
       }
-    } finally {
-      button.disabled=false;
-    }
-  };
+    };
+  });
   document.getElementById('expand').onclick=()=>{
     expanded=!expanded;
     document.querySelectorAll('main details').forEach(item=>{item.open=expanded;});

@@ -16,8 +16,10 @@ bundled under it; no other installed skill or MCP server is required. Read modul
 when their phase applies. Node.js 22+ runs the document tools; Python 3.10+ and Git run
 the review helpers. Technical diagram compilation optionally needs the pinned npm
 dependencies and Chrome/Chromium; see [document setup](modules/prd/GUIDE.md).
+Before rendering Mermaid diagrams, follow that setup guide and use normal SVG compilation.
+Disclose any source-only fallback alongside the document link.
 
-Generated planning documents support copying the complete rendered document as a PNG
+Generated planning documents support copying each compiled diagram as a PNG
 image and displaying LaTeX formulas offline. Use the documented math delimiters in
 prose; keep source JSON authoritative. See [document setup](modules/prd/GUIDE.md).
 
