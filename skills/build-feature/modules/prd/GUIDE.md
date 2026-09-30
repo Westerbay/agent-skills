@@ -23,9 +23,23 @@ Node 22+ is required. The checked-in assets support validation and PRD rendering
 installing packages. SVG diagram compilation and rebuilding assets additionally require
 `npm ci --ignore-scripts` in this skill directory and Chrome (`--browser` overrides it).
 Dependencies are pinned in package-lock.json. Never run `npx latest` per document.
-When browser or optional dependencies are unavailable, use `render --diagram-source`
-to show the original Mermaid source explicitly and report that SVG compilation was
-skipped. This fallback requires only Node; never silently discard a required diagram.
+
+Before rendering a document containing Mermaid, verify Node 22+, the module's local
+`playwright-core` dependency, and an available Chrome executable. Install the locked
+dependencies once in this module, or in a persistent writable copy of the complete
+module when the installed skill is read-only. Reuse that runtime for subsequent documents;
+do not install it only in one project's temporary directory and assume other projects
+are ready. Skill updates that replace the module may require setup again. Run the normal
+`render` command so diagrams are compiled automatically; do not choose source-only output
+merely to avoid setup. Respect the host's permission requirements for package installation
+and browser execution; if already authorized, proceed without asking again.
+
+After rendering, verify that every diagram entry has an SVG in the HTML's embedded
+`document-data` payload and inspect its displayed result when browser access permits.
+If installation or browser execution is blocked, use `render --diagram-source` only as
+an explicit degraded fallback. Tell the user alongside the HTML link that diagrams are
+shown as Mermaid text, why compilation was skipped, and how to enable it. This fallback
+requires only Node; never present source-only diagrams as completed images.
 
 ```bash
 node <prd-skill>/scripts/prd.mjs validate <feature>.prd.json --plan <feature>.tech-plan.json
@@ -44,14 +58,14 @@ JSON is a preview, not a filesystem save or approval. Imported Mermaid remains v
 as source until compiled with `render`. Design skills are needed to change the shared
 template, not to produce each PRD. Examples live in `examples/`.
 
-## Copy as image and mathematical formulas
+## Copy a diagram and mathematical formulas
 
-Use **Copy as image** in the HTML toolbar to copy the complete document as a PNG,
-including expanded task details and formulas. Copying includes the full source
-document even when search filters the visible view. It preserves the current theme
-and does not change the visible document. If clipboard access is unavailable or
-denied, the reader downloads a PNG instead and reports that outcome. Very large
-documents remain subject to the browser's canvas limits.
+Each compiled SVG has a **Copy diagram as image** button below it (in French,
+**Copier le diagramme en image**). It copies only that diagram as a PNG to the clipboard,
+without the surrounding document. If clipboard access is unavailable or denied, the
+reader downloads that diagram as a PNG named after its entry ID and reports the outcome.
+Source-only diagrams have no copy button. Browser canvas size limits still apply to
+very large diagrams.
 
 Write inline LaTeX as `\(a^2 + b^2 = c^2\)` and display formulas as
 `\[\frac{a}{b}\]` or `$$\sum_{i=1}^{n} i$$` in prose fields, including array items.

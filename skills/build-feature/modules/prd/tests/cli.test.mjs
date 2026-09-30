@@ -30,6 +30,28 @@ test('a portable runtime renders offline without npm and escapes embedded JSON',
   }finally{await rm(dir,{recursive:true,force:true});}
 });
 
+test('missing diagram dependencies explain setup without replacing the previous HTML',async()=>{
+  const dir=await mkdtemp(join(tmpdir(),'feature-doc-missing-dependencies-'));
+  const root=fileURLToPath(new URL('../',import.meta.url));
+  try {
+    await cp(join(root,'scripts'),join(dir,'scripts'),{recursive:true});
+    await cp(join(root,'assets'),join(dir,'assets'),{recursive:true});
+    const source=join(dir,'plan.json'),out=join(dir,'plan.html');
+    await cp(join(root,'examples/reader.tech-plan.json'),source);
+    await writeFile(out,'Previous verified document');
+    assert.throws(()=>execFileSync(process.execPath,[join(dir,'scripts/prd.mjs'),'render',source,'--out',out],{stdio:'pipe'}),error=>{
+      assert.equal(error.status,1);
+      const message=error.stderr.toString();
+      assert.match(message,/npm ci --ignore-scripts/);
+      assert.ok(message.includes(dir));
+      assert.match(message,/--diagram-source/);
+      assert.match(message,/playwright-core/);
+      return true;
+    });
+    assert.equal(await readFile(out,'utf8'),'Previous verified document');
+  }finally{await rm(dir,{recursive:true,force:true});}
+});
+
 test('technical plan has an explicit offline diagram-source fallback',async()=>{
   const dir=await mkdtemp(join(tmpdir(),'feature-doc-diagrams-'));
   const root=fileURLToPath(new URL('../',import.meta.url));

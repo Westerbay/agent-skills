@@ -2,6 +2,7 @@
 import {readFile, writeFile, mkdir, rename, unlink} from 'node:fs/promises';
 import {resolve, dirname, basename, relative} from 'node:path';
 import {parseArgs} from 'node:util';
+import {fileURLToPath} from 'node:url';
 import {createHash, randomUUID} from 'node:crypto';
 import {validateDocument, validatePlan, taskContext, coverageGaps} from './document-model.mjs';
 import {digest, newExecution, validateExecution, approve, nextTask, recordTask, recordCheck} from './execution.mjs';
@@ -81,7 +82,13 @@ async function main() {
   if(target===resolve(source)||values.state&&target===resolve(values.state)||values.plan&&target===resolve(values.plan))throw new Error('HTML output cannot overwrite a source document');
   let diagrams={};
   if(doc.entries?.some(entry=>entry.diagram) && !values['diagram-source']) {
-    const {renderDiagrams}=await import('./diagrams.mjs');
+    let renderDiagrams;
+    try {({renderDiagrams}=await import('./diagrams.mjs'));}
+    catch(error) {
+      if(error.code!=='ERR_MODULE_NOT_FOUND' || !error.message.includes("'playwright-core'"))throw error;
+      const moduleDirectory=fileURLToPath(new URL('../',import.meta.url));
+      throw new Error(`SVG diagram compilation requires playwright-core. Run npm ci --ignore-scripts in ${moduleDirectory}, then retry with Chrome installed (--browser overrides its path). Use --diagram-source only for an explicitly disclosed source-only fallback. Original error: ${error.message}`,{cause:error});
+    }
     diagrams=await renderDiagrams(doc,resolve(values.cache||`${dirname(resolve(source))}/.feature-doc-cache`),values.browser);
   }
   let linkedPlan;
