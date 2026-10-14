@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Add portable `draft-pr` with a bundled PR template, local preparation helpers and
+  publication checks, without connected tracker dependencies.
+
 - Replace whole-document PNG copying with a copy button for each compiled SVG diagram.
 - Check diagram runtime prerequisites before rendering, reuse persistent installations,
   and disclose source-only fallbacks alongside document links.

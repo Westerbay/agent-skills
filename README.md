@@ -7,6 +7,7 @@ Reusable workflows for software development, distributed as [Agent Skills](https
 | Skill | Purpose |
 | --- | --- |
 | [software-developer](skills/software-developer/SKILL.md) | Implement, fix, refactor and validate software changes using the repository's conventions. |
+| [draft-pr](skills/draft-pr/SKILL.md) | Prepare and open a GitHub draft PR from a verified committed diff, using a bundled or custom template. |
 | [build-feature](skills/build-feature/SKILL.md) | Guide a substantial feature from discovery and explicit approvals through implementation, review and delivery. Includes planning document tools and review helpers. |
 
 ## Install
@@ -20,8 +21,8 @@ npx skills add Westerbay/agent-skills --list
 # Choose skills and agents interactively
 npx skills add Westerbay/agent-skills
 
-# Install both skills globally for Codex
-npx skills add Westerbay/agent-skills --skill software-developer build-feature --agent codex --global
+# Install all three skills globally for Codex
+npx skills add Westerbay/agent-skills --skill software-developer build-feature draft-pr --agent codex --global
 
 # Install one skill for the current project
 npx skills add Westerbay/agent-skills --skill software-developer --agent codex
@@ -42,6 +43,8 @@ runtime. See the [document guide](skills/build-feature/modules/prd/GUIDE.md).
 
 These skills use the tools available to the agent and fall back to sequential work when independent agents are unavailable. `build-feature` requires Node.js 22+ for its document tools and Python 3.10+ and Git for its review helpers. Optional diagram compilation requires additional dependencies and Chrome/Chromium; see the [document guide](skills/build-feature/modules/prd/GUIDE.md).
 
+`draft-pr` prepares context and PR bodies locally with Python 3.10+ and Git, without third-party Python packages or connected trackers. It includes a default PR template; pass `--template` to use your own. Publishing requires an authenticated GitHub CLI (`gh`) or an available GitHub tool, plus user authorization.
+
 Instructions, metadata and examples are written in English. Agents should still use the user's requested language in conversation; the document renderer supports English and French.
 
 ## Maintain this repository
@@ -52,6 +55,7 @@ Treat `skills/` in this checkout as the source of truth. Edit the relevant `SKIL
 node scripts/validate-skills.mjs
 node --test skills/build-feature/modules/prd/tests/*.test.mjs
 python -m unittest discover -s skills/build-feature/modules/review/tests -p "test_*.py"
+python -m unittest discover -s skills/draft-pr/tests -p "test_*.py"
 ```
 
 The validation workflow runs these checks on pushes and pull requests. Each new skill belongs in `skills/<name>/`, with a `SKILL.md` containing `name` and `description` in YAML front matter. Bundle its required references, scripts and assets and use relative paths.

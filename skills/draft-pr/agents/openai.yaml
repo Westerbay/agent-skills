@@ -1,0 +1,7 @@
+interface:
+  display_name: "GitHub Draft PR"
+  short_description: "Prepare and open verified draft PRs"
+  default_prompt: "Use $draft-pr to create a draft PR for the current branch."
+
+policy:
+  allow_implicit_invocation: true
