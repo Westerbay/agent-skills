@@ -52,6 +52,27 @@ class PreparePRTests(unittest.TestCase):
         self.assertNotIn('Related Issues', body)
         self.assertNotIn('Screenshots', body)
 
+    def test_technical_diagrams_render_without_ui_changes(self):
+        diagram = 'Committed data flow\n\n```mermaid\nflowchart LR\n  Browser --> API\n```'
+        content = {'title': 'Explain data flow', 'description': 'Show the delivered data path.',
+                   'diagrams': [diagram]}
+        body = helper.render_body(content, helper.template_path(None).read_text(),
+                                  {'ui': False, 'base': 'main'})
+        self.assertIn('## Technical Diagrams\n\n' + diagram, body)
+        self.assertNotIn('## Screenshots / Demo', body)
+        with self.assertRaisesRegex(ValueError, 'Technical Diagrams'):
+            helper.render_body(content, '## Description\n', {'ui': False, 'base': 'main'})
+
+    def test_captured_screenshot_replaces_upload_placeholder(self):
+        screenshot = 'Updated view\n\n![Updated view](https://example.invalid/render.png)'
+        content = {'title': 'Update view', 'description': 'Show the new visual result.',
+                   'screenshots': [screenshot]}
+        body = helper.render_body(content, helper.template_path(None).read_text(),
+                                  {'ui': True, 'base': 'main'})
+        self.assertIn('## Screenshots / Demo\n\n' + screenshot, body)
+        self.assertNotIn('Please add screenshots', body)
+        self.assertNotIn('## Technical Diagrams', body)
+
     def test_explicit_template_overrides_default_and_missing_path_fails(self):
         with tempfile.TemporaryDirectory() as directory:
             template = Path(directory) / 'custom.md'

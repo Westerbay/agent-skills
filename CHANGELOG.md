@@ -4,6 +4,8 @@
 
 - Add portable `draft-pr` with a bundled PR template, local preparation helpers and
   publication checks, without connected tracker dependencies.
+- Bundle `PR.md` and include relevant technical diagrams and proactively captured visual
+  evidence in draft PRs when available.
 
 - Replace whole-document PNG copying with a copy button for each compiled SVG diagram.
 - Check diagram runtime prerequisites before rendering, reuse persistent installations,

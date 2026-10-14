@@ -88,11 +88,11 @@ def collect(repo, base=None):
 
 
 def template_path(explicit):
-    candidates = [Path(explicit)] if explicit else [Path(__file__).resolve().parents[1] / 'assets/MR.md']
+    candidates = [Path(explicit)] if explicit else [Path(__file__).resolve().parents[1] / 'assets/PR.md']
     for candidate in candidates:
         if candidate.is_file():
             return candidate
-    raise ValueError('MR.md template not found; pass --template')
+    raise ValueError('PR.md template not found; pass --template')
 
 
 def render_body(content, template, context):
@@ -100,7 +100,7 @@ def render_body(content, template, context):
     description = content.get('description', '').strip()
     if not title or '\n' in title or not description:
         raise ValueError('Provide a single-line title and a concrete description')
-    allowed = {'title', 'description', 'changes', 'related', 'testing', 'checklist', 'notes', 'screenshots'}
+    allowed = {'title', 'description', 'changes', 'related', 'testing', 'checklist', 'notes', 'screenshots', 'diagrams'}
     if set(content) - allowed:
         raise ValueError(f'Unknown content fields: {sorted(set(content) - allowed)}')
     body = {'Description': description}
@@ -123,6 +123,7 @@ def render_body(content, template, context):
         tests.append(f"- [{mark}] {check['text']} ({check['status']})" + (f". {check['evidence']}" if check.get('evidence') else ''))
     body['Testing'] = '\n'.join(tests)
     body['Checklist'] = '\n'.join(f"- [{'x' if item.get('checked') is True else ' '}] {item['text']}" for item in content.get('checklist', []))
+    body['Technical Diagrams'] = '\n\n'.join(content.get('diagrams', []))
     screenshots = content.get('screenshots', [])
     body['Screenshots / Demo'] = '\n'.join(screenshots)
     if context['ui'] and not screenshots:
@@ -135,14 +136,14 @@ def render_body(content, template, context):
     for heading in headings:
         matches = [key for key in body if heading.endswith(key)]
         if not matches:
-            raise ValueError(f'Unsupported custom MR.md section: {heading}. Adapt the mapping explicitly.')
+            raise ValueError(f'Unsupported custom PR.md section: {heading}. Adapt the mapping explicitly.')
         key = matches[0]
         if body[key]:
             sections.append(f'## {heading}\n\n{body[key]}')
             used.add(key)
     missing = [key for key in body if body[key] and key not in used]
     if missing:
-        raise ValueError(f'MR.md has no heading for populated sections: {missing}')
+        raise ValueError(f'PR.md has no heading for populated sections: {missing}')
     result = f'# Pull Request: {title}\n\n' + '\n\n'.join(sections) + '\n'
     if '<!--' in result or '[Title]' in result:
         raise ValueError('Unresolved template placeholder or comment')

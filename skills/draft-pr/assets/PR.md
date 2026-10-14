@@ -6,6 +6,8 @@
 
 ## Related Issues / Tickets
 
+## Technical Diagrams
+
 ## Screenshots / Demo
 
 ## Testing

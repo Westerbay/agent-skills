@@ -43,7 +43,8 @@ runtime. See the [document guide](skills/build-feature/modules/prd/GUIDE.md).
 
 These skills use the tools available to the agent and fall back to sequential work when independent agents are unavailable. `build-feature` requires Node.js 22+ for its document tools and Python 3.10+ and Git for its review helpers. Optional diagram compilation requires additional dependencies and Chrome/Chromium; see the [document guide](skills/build-feature/modules/prd/GUIDE.md).
 
-`draft-pr` prepares context and PR bodies locally with Python 3.10+ and Git, without third-party Python packages or connected trackers. It includes a default PR template; pass `--template` to use your own. Publishing requires an authenticated GitHub CLI (`gh`) or an available GitHub tool, plus user authorization.
+`draft-pr` prepares context and PR bodies locally with Python 3.10+ and Git, without third-party Python packages or connected trackers. It includes a default `PR.md` template and guidance to attach relevant technical diagrams
+and proactively capture changed visuals when straightforward; pass `--template` to use your own. Publishing requires an authenticated GitHub CLI (`gh`) or an available GitHub tool, plus user authorization.
 
 Instructions, metadata and examples are written in English. Agents should still use the user's requested language in conversation; the document renderer supports English and French.
 
