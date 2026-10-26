@@ -109,6 +109,8 @@ Re-plan when evidence invalidates it.
 - For persistence, transactions, migrations, external providers, or background side
   effects, read and follow
   [references/data-and-integrations.md](references/data-and-integrations.md).
+- For repeated validation, misleading names, dense conditions, or mixed orchestration,
+  apply [references/maintainability.md](references/maintainability.md).
 
 ### Scope and reuse
 
@@ -120,7 +122,9 @@ Re-plan when evidence invalidates it.
 - Keep changes focused. Avoid unrelated cleanup and whole-file reformatting.
 - Centralize each business rule in one source of truth. Reuse domain predicates,
   constants, and mappings across entry points instead of copying equivalent lists or
-  conditions.
+  conditions. Search by duplicated literals and regex fragments as well as symbols;
+  compare semantics and consumers before consolidating. Generated repetition and separate
+  runtime implementations may be necessary; keep their contract and parity checks aligned.
 - Place constants with the module that owns their meaning. Public product identity,
   deployment settings, infrastructure defaults, protocol statuses, and feature rules
   should not accumulate in one shared configuration object. Share a rule only across
@@ -149,8 +153,13 @@ Re-plan when evidence invalidates it.
 
 ### Responsibilities and data flow
 
+- Name operations for what they do, predicates for the decision they express, and
+  identifiers for their domain role. Follow the repository's language-specific casing.
+  Recheck names when a helper gains callers outside its original context.
 - Split a file or module when it mixes independent responsibilities or materially harms
-  navigation. Do not split into shallow pass-through wrappers.
+  navigation. Extract cohesive steps with simple inputs; keep orchestration readable and
+  preserve authorization, transaction/lock scope, side-effect order, cancellation, retries,
+  errors and cleanup. Do not split into shallow pass-through wrappers.
 - Reserve ternary expressions for short choices between simple scalar values or existing
   references. If either branch constructs a full object or array, use a named variable
   with `if`/`else`, a guard clause, or an early return so the control flow stays readable.
@@ -162,7 +171,9 @@ Re-plan when evidence invalidates it.
   is clearer inline.
 - Treat a new complexity or lint suppression as evidence to revisit the boundary. Keep
   provider-neutral domain code free of provider-specific imports when a repository seam
-  already exists.
+  already exists. Treat line counts and complexity scores as investigation signals, not
+  automatic defects or reasons to eliminate useful guards. Follow existing lint policy;
+  changing its thresholds is a separate decision.
 
 ### Types, validation, and errors
 

@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Strengthen development and review guidance for shared validation, precise naming,
+  cohesive orchestration and evidence-based maintainability findings, with behavioral
+  safeguards for refactoring and examples that distinguish useful guards from complexity.
+
 - Add portable `draft-pr` with a bundled PR template, local preparation helpers and
   publication checks, without connected tracker dependencies.
 - Bundle `PR.md` and include relevant technical diagrams and proactively captured visual
