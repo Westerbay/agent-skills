@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Keep validated internal contracts concrete, confine `unknown` to legitimate boundaries,
+  and review assertions and parser generics by their evidence instead of textual bans.
+
 - Route security-relevant reviews to Cloudflare's optional `security-audit` skill with
   explicit mode selection, sandbox requirements and unranked validation gaps; preserve
   source-only fallback and the existing review protocol when the companion is absent.

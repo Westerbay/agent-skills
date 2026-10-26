@@ -37,6 +37,10 @@ silently omit a file, failed check, or assigned dimension. Do not edit code or p
 - For long functions, identify the mixed responsibilities and a cohesive split that
   preserves authorization, locks, transaction lifetime, side-effect order, cancellation,
   retries, errors and cleanup. A line count or number of guards alone is not a finding.
+- Trace `unknown` from its producer to validation and consumers. Keep real untrusted,
+  caught-error or heterogeneous boundaries; flag internal domain contracts widened without
+  cause, unsafe assertions, or parser generics that promise an unvalidated caller-selected
+  result. Recommend the owned type or actual validation, never `any` or an opaque substitute.
 - Check accidental complexity, duplication of business rules, dead branches, swallowed
   errors, resource cleanup and needless abstraction introduced by the task.
 - Trace null, zero, empty and failure behavior through real callers. Check useful error
@@ -52,6 +56,9 @@ silently omit a file, failed check, or assigned dimension. Do not edit code or p
   dependency, localization and error-handling conventions. Cite the applicable rule.
 - Check that canonical schemas, types, constants, tokens, formatters and predicates are
   reused. Inspect all consumers before demanding a shared abstraction.
+- Check assertion restrictions against the actual repository policy. Distinguish unsafe
+  domain casts from literal `as const`, `satisfies` and import aliases; a textual match alone
+  does not establish an unsafe conversion. Library-seam assertions need a verified invariant.
 - Check that names describe actual operations, domain identifiers and boolean decisions
   at their current callers. Separate misleading semantics from personal naming taste.
 - Verify locale/formatting behavior where localization exists or the feature requires it.

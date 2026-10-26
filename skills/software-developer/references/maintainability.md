@@ -37,6 +37,28 @@ The second form is justified by shared semantics and real consumers. It is not a
 to create a generic `isValidId` for unrelated identifiers. Verify parity through existing
 consumer tests and a focused regression case when the substitution has a plausible risk.
 
+## Types after validation
+
+Trace where an untrusted value acquires a domain meaning. Keep `unknown` at that real
+boundary until a schema or sound type guard establishes the contract, then propagate the
+owned domain type through internal consumers. Caught errors and genuinely heterogeneous
+containers can also need narrowing; their use of `unknown` is not itself a defect.
+
+```ts
+// Unsafe: the assertion promises an AnalysisJob without checking the input.
+const job = JSON.parse(text) as AnalysisJob
+
+// Validated: the existing schema establishes the domain contract.
+const input: unknown = JSON.parse(text)
+const job = analysisJobSchema.parse(input)
+```
+
+Do not replace the assertion with `parse<T>(text): T` unless the output is actually linked
+to and established by runtime validation. Replacing `unknown` with `any`, `{}` or `object`
+also loses useful guarantees. Review the actual producer, validation and consumers before
+flagging an annotation. Literal `as const`, `satisfies` and import aliases are not equivalent
+to asserting an unvalidated domain object; apply any explicit repository restrictions.
+
 ## Names and control flow
 
 - Use domain terms and language conventions. An operation named `upload` should make
@@ -75,6 +97,9 @@ options, coupling, or obscure their different behavior.
 ## Sources and scope
 
 These are references for judgment, not replacement repository policies:
+
+- [TypeScript handbook: unknown and generic functions](https://www.typescriptlang.org/docs/handbook/2/functions.html#unknown)
+  for boundary narrowing and the relationship between input and output types.
 
 - [Google TypeScript style guide](https://google.github.io/styleguide/tsguide.html) and
   [PEP 8](https://peps.python.org/pep-0008/) for language-specific naming and consistency.
