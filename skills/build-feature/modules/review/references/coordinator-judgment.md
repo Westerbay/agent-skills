@@ -18,4 +18,7 @@ Unavailable documents/visuals limit coverage and must not be silently assumed co
 
 For full review, apply the verifier reference to warnings/criticals. Preserve raw replies,
 accepted corrections and reasons separately. A failed verifier retains findings as
-unverified; it cannot turn the result into a clean pass. Reaggregate final counts.
+unverified; it cannot turn the result into a clean pass. For security, apply the
+[verifier evidence exception](verifier.md#security-evidence-exception): preserve the raw
+candidate and report the unresolved check as unranked with partial coverage, until the
+required verification succeeds. Reaggregate final counts.

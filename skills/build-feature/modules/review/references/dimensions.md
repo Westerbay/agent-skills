@@ -90,6 +90,10 @@ silently omit a file, failed check, or assigned dimension. Do not edit code or p
 
 ## Security (full)
 
+- Apply [security-audit integration](security-audit-integration.md) and the selected
+  installed companion guidance. Preserve its execution controls and certainty states;
+  unresolved security hypotheses belong in notes/coverage gaps, never ranked findings.
+
 - Trace untrusted input, authentication, authorization, tenant/ownership scoping and
   secrets through the actual access path. Check every entry point that can bypass rules.
 - Examine injection, unsafe deserialization, path traversal, request forgery, unsafe

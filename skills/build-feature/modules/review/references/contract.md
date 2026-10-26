@@ -34,7 +34,7 @@ Return exactly this JSON shape (no prose, no fences):
   "notes": [],
   "errors": []
 }
-Rules: summary counts == findings split by severity, exactly. Omit line/end_line for file-level findings. Never use severity "nit" for the security section. No findings → status "ok", coverage "complete", zeros, empty arrays.
+Rules: summary counts == findings split by severity, exactly. Omit line/end_line for file-level findings. Never use severity "nit" for the security section. No findings means status "ok" and coverage "complete" only when assigned checks completed without unresolved blockers. Otherwise use partial/error status and describe the gap; zero findings never proves complete coverage.
 ```
 
 ## Full schema (orchestrator validation reference)
@@ -75,10 +75,14 @@ Rules: summary counts == findings split by severity, exactly. Omit line/end_line
 
 ## Output rules
 
+For security evidence, follow [security-audit integration](security-audit-integration.md):
+`needs_validation` stays in unranked notes, with partial coverage and errors when decisive.
+Do not encode it as a ranked finding merely to fit this schema.
+
 - Always emit the JSON, even on failure.
 - Never omit required fields — use empty string / empty array.
 - `summary` counts equal the findings array split by severity, exactly.
-- No findings → `status: "ok"`, `coverage: "complete"`, zeros, empty arrays.
+- No findings and no unresolved blockers after all assigned checks → `status: "ok"`, `coverage: "complete"`, zero counts and empty findings/errors. Otherwise report partial/error coverage with the exact blocker.
 - Partial review → `status: "partial"` + `coverage: "partial"` + `errors[]` explaining why.
 - Hard failure → `status: "error"` + `coverage: "not-run"` + `errors[]` with cause.
 - Security section never uses `severity: "nit"`.

@@ -48,6 +48,16 @@ and proactively capture changed visuals when straightforward; pass `--template` 
 
 Instructions, metadata and examples are written in English. Agents should still use the user's requested language in conversation; the document renderer supports English and French.
 
+## Optional security review companion
+
+`build-feature` routes security-relevant reviews to an installed
+[Cloudflare security-audit skill](https://github.com/cloudflare/security-audit-skill).
+Focused reviews use its relevant guidance; explicit audit or full-review requests follow
+its mode-selection rules. No companion is installed automatically. Without it, the
+bundled review remains usable for source-based checks and reports the coverage limit.
+See the [integration adapter](skills/build-feature/modules/review/references/security-audit-integration.md)
+for sandbox requirements and handling of unconfirmed findings.
+
 ## Maintain this repository
 
 Treat `skills/` in this checkout as the source of truth. Edit the relevant `SKILL.md`, references or scripts here, validate the changes, update [CHANGELOG.md](CHANGELOG.md), and commit and push to GitHub. Do not edit an installed copy and expect those edits to reach this repository.

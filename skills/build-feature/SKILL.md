@@ -152,7 +152,11 @@ implementation -> targeted validation -> simplification -> validation
 ```
 
 The simplifier is the internal role defined in
-[references/simplifier.md](references/simplifier.md). [Bundled review](modules/review/GUIDE.md) remains read-only;
+[references/simplifier.md](references/simplifier.md). For security-relevant reviews, the
+[bundled review adapter](modules/review/references/security-audit-integration.md) loads
+Cloudflare's optional `security-audit` skill when installed, selecting mode from the user's
+request and preserving safe execution and evidence requirements.
+[Bundled review](modules/review/GUIDE.md) remains read-only;
 use a separate focused implementation pass to fix accepted findings. Re-run a task review at most once
 after fixes. If material warnings remain after two review passes, stop that dependency
 chain and ask the user rather than looping indefinitely. Delivery follows [delivery modes](references/delivery.md). Local mode ends each task at

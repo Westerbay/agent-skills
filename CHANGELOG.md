@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Route security-relevant reviews to Cloudflare's optional `security-audit` skill with
+  explicit mode selection, sandbox requirements and unranked validation gaps; preserve
+  source-only fallback and the existing review protocol when the companion is absent.
+
 - Strengthen development and review guidance for shared validation, precise naming,
   cohesive orchestration and evidence-based maintainability findings, with behavioral
   safeguards for refactoring and examples that distinguish useful guards from complexity.
