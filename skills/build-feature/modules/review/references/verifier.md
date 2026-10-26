@@ -20,7 +20,17 @@
 
 **Tie-breaking is adversarial:** when genuinely uncertain whether a finding is real, the verifier must choose `intentional` or `unsourced` — the cost of a posted false positive (human dismissal, reverted "slop feedback") exceeds the cost of a demoted maybe.
 
-**Fail-open on verifier failure:** if the verifier errors or returns an invalid reply after one retry, the orchestrator keeps that reviewer's findings **unchanged** (as if all `real`) and notes "unverified" in the report. The verifier is a false-positive filter — its failure must never delete a potentially real bug. Same rule per-finding: an id missing from `verdicts[]` is treated as `real`.
+**Fail-open on verifier failure (non-security dimensions only):** if the verifier errors or returns an invalid reply after one retry, the orchestrator keeps that reviewer's findings **unchanged** (as if all `real`) and notes "unverified" in the report. The verifier is a false-positive filter — its failure must never delete a potentially real bug. Same rule per-finding: an id missing from `verdicts[]` is treated as `real`.
+
+### Security evidence exception
+
+For security findings, follow [security-audit integration](security-audit-integration.md).
+A verifier error, invalid reply or missing verdict cannot establish confirmation. Preserve
+raw candidates and their evidence, but keep candidates lacking required verification as
+unranked investigation notes with partial status/coverage and exact errors until resolved.
+Do not default them to `real`, demote them to `nit`, or imply full audit completion.
+Apply this exception to every retry/default rule below; other dimensions retain their
+existing behavior. Only verified security results re-enter ranked findings.
 
 ## Dispatch envelope
 
@@ -81,9 +91,9 @@ Rules: one verdict per finding id, ids verbatim, no extra ids. Token budget
 
 ## Orchestrator validation
 
-1. Parse JSON (strip accidental fences). Unparseable → retry once with the standard "JSON only" nudge → fail-open.
-2. `verdicts[].id` must each match a dispatched finding id; unknown ids are ignored, missing ids default to `real`.
-3. `verdict` enum valid; invalid value on an entry → that entry defaults to `real`.
+1. Parse JSON (strip accidental fences). Unparseable → retry once with the standard "JSON only" nudge → non-security fail-open; for security apply the evidence exception.
+2. `verdicts[].id` must each match a dispatched finding id; unknown ids are ignored, missing ids default to `real` only outside security; for security apply the evidence exception.
+3. `verdict` enum valid; invalid value on an entry → that entry defaults to `real` only outside security; for security apply the evidence exception.
 4. Apply actions (keep / drop / demote) to the reviewer's findings **before** they enter aggregation. Recompute the reviewer's `summary` counts after application.
 
 ## Report surface

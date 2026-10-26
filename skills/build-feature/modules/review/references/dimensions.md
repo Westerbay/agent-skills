@@ -28,6 +28,15 @@ silently omit a file, failed check, or assigned dimension. Do not edit code or p
 
 ## Quality
 
+- For duplication, naming, dense control flow or mixed orchestration, apply the
+  [maintainability guide](../../development/references/maintainability.md) as review
+  criteria; it does not authorize implementation or change this review's scope/severity.
+- Search repeated literals and regex fragments beyond the patch. Name the rule's owner,
+  duplicated sites and affected consumers; compare acceptance and failure semantics before
+  proposing reuse. Distinguish generated/cross-runtime repetition from drift-prone copies.
+- For long functions, identify the mixed responsibilities and a cohesive split that
+  preserves authorization, locks, transaction lifetime, side-effect order, cancellation,
+  retries, errors and cleanup. A line count or number of guards alone is not a finding.
 - Check accidental complexity, duplication of business rules, dead branches, swallowed
   errors, resource cleanup and needless abstraction introduced by the task.
 - Trace null, zero, empty and failure behavior through real callers. Check useful error
@@ -43,6 +52,8 @@ silently omit a file, failed check, or assigned dimension. Do not edit code or p
   dependency, localization and error-handling conventions. Cite the applicable rule.
 - Check that canonical schemas, types, constants, tokens, formatters and predicates are
   reused. Inspect all consumers before demanding a shared abstraction.
+- Check that names describe actual operations, domain identifiers and boolean decisions
+  at their current callers. Separate misleading semantics from personal naming taste.
 - Verify locale/formatting behavior where localization exists or the feature requires it.
   Do not import another project's bans, TODO formats, component APIs or package choices.
 
@@ -52,6 +63,8 @@ silently omit a file, failed check, or assigned dimension. Do not edit code or p
   Search every caller, including omitted/default arguments, aliases and re-exports.
 - Trace write/read paths, UI/export/background consumers, legacy records and migration
   effects. Check behavioral compatibility against the approved impact map.
+- When validation is consolidated, check acceptance parity and local error behavior at
+  the real entry points, including another runtime when it shares the contract.
 - Confirm regression checks exercise the changed seam rather than only a new pure helper.
   Compare equivalent list/detail, create/update and sync/async paths where relevant.
 
@@ -76,6 +89,10 @@ silently omit a file, failed check, or assigned dimension. Do not edit code or p
   provider and background paths. State where evidence cannot establish runtime safety.
 
 ## Security (full)
+
+- Apply [security-audit integration](security-audit-integration.md) and the selected
+  installed companion guidance. Preserve its execution controls and certainty states;
+  unresolved security hypotheses belong in notes/coverage gaps, never ranked findings.
 
 - Trace untrusted input, authentication, authorization, tenant/ownership scoping and
   secrets through the actual access path. Check every entry point that can bypass rules.

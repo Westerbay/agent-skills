@@ -36,12 +36,22 @@ reviewed, report partial coverage; do not pretend an empty text patch proves cor
 Use the same saved baseline/result labels in every reply. Do not use `anchors` for local
 snapshots: it expects real Git review-request hunks.
 
+## Security companion routing
+
+Before a security-relevant or explicitly requested security review, read
+[security-audit integration](references/security-audit-integration.md), discover the
+optional installed `security-audit` skill, and select guidance or full audit mode from
+the user's request. Apply its execution and evidence requirements to security validation.
+The internal light/full review choice does not by itself authorize a complete audit.
+
 ## Execute the review
 
 Read [dimensions](references/dimensions.md) and [contract](references/contract.md). With
 available and permitted subagents, assign a separate read-only reviewer to each dimension;
 parallel readers are allowed. Give absolute paths to the checkpoint/patch, manifest,
-contract, assigned dimension, repository instructions and approved task context.
+contract, assigned dimension, repository instructions and approved task context. For
+security work, also pass the resolved companion path, selected mode and adapter reference;
+if unavailable, disclose the source-only fallback.
 Queue dimensions when concurrency is limited; do not silently omit them.
 
 Without subagents, execute the same dimensions in separate sequential passes yourself.
