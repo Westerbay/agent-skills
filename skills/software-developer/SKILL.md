@@ -191,11 +191,20 @@ Re-plan when evidence invalidates it.
   from a typed local; use an explicit named interface when it documents a real module or
   public boundary.
 - Validate untrusted runtime input at the boundary with the project's schema/validator.
-  Do not re-parse already trusted, typed internal values without a concrete reason.
+  Keep `unknown` for genuinely unvalidated input, caught errors or heterogeneous values;
+  narrow it promptly where the value's meaning is established. Validated internal values
+  and APIs should use the concrete contract owned by their domain. Do not re-parse trusted,
+  typed internal values without a concrete reason or leak `unknown` through their types.
 - Do not bypass type problems with `as`, double assertions, `any`, non-null assertions,
   or error-ignore directives. Fix the contract or validate and narrow at the boundary.
-  Prefer annotations, generics, inference, `satisfies`, and discriminated unions.
-  Import aliases are not casts.
+  Prefer annotations, inference, `satisfies` and discriminated unions. A parser generic
+  must derive its result from a runtime schema/validator; an unconstrained caller-selected
+  type does not prove the parsed output. Do not disguise `unknown` with `any`, `{}`, `object`
+  or a generic that promises an arbitrary result.
+- Distinguish unsafe assertions from literal-preserving `as const`, checked `satisfies`,
+  and import aliases; follow stricter repository rules where documented. If an assertion
+  is unavoidable at a library seam, keep it local, explain and verify the invariant, and
+  use it only when repository policy permits. It must not replace runtime validation.
 - Do not use lint disables, wildcard imports, or swallowed exceptions to silence a design
   or type problem.
 - Preserve useful error status, cause, and context. Never report success after a failed
