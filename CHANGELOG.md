@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Pin validation CI to Python 3.12.16, including the SSL and tarfile security fixes.
+
 - Keep validated internal contracts concrete, confine `unknown` to legitimate boundaries,
   and review assertions and parser generics by their evidence instead of textual bans.
 
