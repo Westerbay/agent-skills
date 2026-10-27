@@ -2,6 +2,35 @@
 
 ## Unreleased
 
+- Require English Conventional Commit messages and type-prefixed branch names in both
+  development workflows; document the common types and preserve explicit user names.
+- Merge build-feature technical and implementation approval into Gate B, with logic/UML,
+  concise requirements and the task DAG rendered in one document. Remove Gate C from
+  new execution records and preserve legacy records with an explicit migration boundary.
+- Dispatch dependency-ready CODE tasks with disjoint write ownership in parallel; run
+  simplification, specialist review and accepted corrections once on the integrated feature,
+  then deliver one small checkpoint or authorized draft PR/MR per task. Bound review to
+  two feature rounds and keep task patches separate from cumulative review snapshots.
+- Clarify TDD's test-value gate: reuse sufficient behavioral coverage and avoid forced
+  new tests for trivial changes, getters/setters and behavior-preserving refactors.
+
+- Route standalone quality, SOLID, web and security specialists through `build-feature`
+  design, simplification and review checkpoints; apply accepted refactors with fresh
+  snapshot validation inside the existing two-round review loop, without new dependencies
+  or reviewer schemas.
+
+- Apply clear decisions, cohesive SOLID boundaries, behavior-focused testing, and semantic
+  web delivery during `software-developer` implementation; keep its bundled `build-feature`
+  mirror aligned and preserve optional standalone specialist reviews.
+
+- Add standalone code-quality, SOLID/architecture and web review skills with primary-source
+  references, scoped refactoring workflows and behavior-focused validation.
+- Vendor Cloudflare's complete `security-audit` skill at revision
+  `c1c8a8c1471069fb0e188eeaff69b8e8db6564a8`, preserving its MIT license, attribution and
+  source files; verify import integrity and run its bundled tests in validation CI.
+- Use an advisory 80/15/5 unit/integration/end-to-end test target with deviation alerts
+  and evidence-based removal candidates, without discarding useful behavioral coverage.
+
 - Pin validation CI to Python 3.12.16, including the SSL and tarfile security fixes.
 
 - Keep validated internal contracts concrete, confine `unknown` to legitimate boundaries,
