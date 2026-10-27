@@ -1,0 +1,4 @@
+interface:
+  display_name: "Web Review"
+  short_description: "Review SEO, HTML semantics and reusable web behavior"
+  default_prompt: "Use $web-review to review and refactor the web changes in this Git diff for SEO, semantic HTML, accessibility, and reusable components and behavior."

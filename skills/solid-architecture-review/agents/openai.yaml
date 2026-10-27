@@ -1,0 +1,4 @@
+interface:
+  display_name: "SOLID and Architecture Review"
+  short_description: "Review boundaries, extensibility and safe refactors"
+  default_prompt: "Use $solid-architecture-review to review this diff and refactor concrete SOLID, modularity, and file-organization problems while preserving behavior."
