@@ -6,19 +6,23 @@ untrusted input, secrets, deployment permissions or external execution.
 
 ## Resolve the companion and mode
 
-Discover an installed `security-audit` skill through the host's skill catalog and read its
-actual `SKILL.md`; resolve companion files relative to that discovered directory. The
-upstream project is [Cloudflare's security-audit-skill](https://github.com/cloudflare/security-audit-skill).
+Discover an installed `security-audit` skill through the host's skill catalog, or use an
+explicitly supplied and verified repository source directory. Read its actual `SKILL.md`;
+resolve companion files relative to that directory. The upstream project is
+[Cloudflare's security-audit-skill](https://github.com/cloudflare/security-audit-skill).
 Do not assume a hardcoded installation path, matching version, or available agent/runtime
 capabilities. Do not install, update or vendor the companion automatically.
 
 Choose the operating mode from the user's request and the installed skill's triggers.
-Focused security checks and ordinary task/PR reviews use guidance mode: load only relevant
+Focused security checks and ordinary feature/task/PR reviews use guidance mode: load only relevant
 methodology and domain companions, with no automatic six-phase run or audit artifacts.
 Explicit codebase audits, pen tests, full/comprehensive/end-to-end review requests, or
 requested audit reports may require full audit mode under that skill. An internal review
 label such as `full` does not itself constitute such a request. If the user's intent is
 ambiguous, clarify before creating audit artifacts or starting the full workflow.
+In `build-feature`, this is the security dimension of the cumulative final review, not
+a separate audit repeated for every CODE task. Security corrections belong to authorized
+task owners after the read-only checkpoint and share the feature's review-round limit.
 
 For an authorized full audit, follow the companion's complete scope, isolation, coverage,
 verification, artifact and terminal-state requirements. Preserve the host review's scope

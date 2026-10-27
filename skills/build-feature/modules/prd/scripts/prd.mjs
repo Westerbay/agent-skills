@@ -5,7 +5,7 @@ import {parseArgs} from 'node:util';
 import {fileURLToPath} from 'node:url';
 import {createHash, randomUUID} from 'node:crypto';
 import {validateDocument, validatePlan, taskContext, coverageGaps} from './document-model.mjs';
-import {digest, newExecution, validateExecution, approve, nextTask, recordTask, recordCheck} from './execution.mjs';
+import {digest, newExecution, validateExecution, approve, nextTask, recordTask, recordFeature, recordCheck} from './execution.mjs';
 import {renderDocument, escape} from './document-view.mjs';
 
 const usage=`Feature documents, Node 22+
@@ -13,9 +13,10 @@ const usage=`Feature documents, Node 22+
   node prd.mjs render <document.json> [--out <document.html>] [--plan <plan.json>] [--state <run.json>]
   node prd.mjs task-context <prd.json> <task-id> [--plan <plan.json>] [--state <run.json>] [--out <context.json>]
   node prd.mjs init-run <prd.json> --state <run.json> [--plan <plan.json>] [--delivery local|review-request]
-  node prd.mjs approve <prd.json> --state <run.json> --plan <plan.json> --gate A|B|C --revision <rev> --evidence <user-reference> [--authority branch,commit,push,draft-pr]
+  node prd.mjs approve <prd.json> --state <run.json> --plan <plan.json> --gate A|B --revision <rev> --evidence <user-reference> [--authority branch,commit,push,draft-pr]
   node prd.mjs next <prd.json> --state <run.json> --plan <plan.json>
   node prd.mjs record-task <prd.json> <task-id> --state <run.json> --plan <plan.json> --phase <phase> --evidence <actual-result> [--pr <url>]
+  node prd.mjs record-feature <prd.json> --state <run.json> --plan <plan.json> --phase <phase> --evidence <actual-result>
   node prd.mjs record-check <prd.json> <check-id> --state <run.json> [--plan <plan.json>] --result passed|failed|blocked --evidence <actual-result>
   node prd.mjs fingerprint <document.json>
 Render flags: --cache <directory>, --browser <Chrome executable>. Mermaid is compiled only when present. --diagram-source explicitly renders its source without browser/dependencies.
@@ -40,7 +41,7 @@ async function main() {
   const doc=validateDocument(await json(source));
   const plan=values.plan?await json(values.plan):undefined;
   if(plan)validatePlan(doc,plan);
-  const mutating=['approve','record-task','record-check'];
+  const mutating=['approve','record-task','record-feature','record-check'];
   let state;
   if(values.state&&command!=='init-run'){
     if(doc.techPlan&&!plan)throw new Error('Pass --plan to verify the execution record against the technical source');
@@ -56,7 +57,7 @@ async function main() {
     if(state) {
       const taskIds=new Set([id,...context.dependencies.map(item=>item.id)]);
       const checkIds=new Set(context.checks.map(item=>item.id));
-      context.execution={deliveryMode:state.deliveryMode,approvals:state.approvals,
+      context.execution={deliveryMode:state.deliveryMode,approvals:state.approvals,feature:state.feature,
         tasks:Object.fromEntries(Object.entries(state.tasks).filter(([key])=>taskIds.has(key))),
         checks:Object.fromEntries(Object.entries(state.checks).filter(([key])=>checkIds.has(key)))};
     }
@@ -72,6 +73,7 @@ async function main() {
       state=validateExecution(doc,await json(values.state),plan);
       if(command==='approve')approve(doc,state,plan,values.gate,values.revision,values.evidence,values.authority?.split(',').filter(Boolean));
       if(command==='record-task')recordTask(doc,state,plan,id,values.phase,values.evidence,values.pr);
+      if(command==='record-feature')recordFeature(doc,state,plan,values.phase,values.evidence);
       if(command==='record-check')recordCheck(doc,state,plan,id,values.result,values.evidence);
       await output(values.state,state);
     } finally{await unlink(lock);}
@@ -81,7 +83,8 @@ async function main() {
   const target=resolve(values.out||source.replace(/\.json$/i,'')+'.html');
   if(target===resolve(source)||values.state&&target===resolve(values.state)||values.plan&&target===resolve(values.plan))throw new Error('HTML output cannot overwrite a source document');
   let diagrams={};
-  if(doc.entries?.some(entry=>entry.diagram) && !values['diagram-source']) {
+  const diagramDocument = plan || doc;
+  if(diagramDocument.entries?.some(entry=>entry.diagram) && !values['diagram-source']) {
     let renderDiagrams;
     try {({renderDiagrams}=await import('./diagrams.mjs'));}
     catch(error) {
@@ -89,20 +92,20 @@ async function main() {
       const moduleDirectory=fileURLToPath(new URL('../',import.meta.url));
       throw new Error(`SVG diagram compilation requires playwright-core. Run npm ci --ignore-scripts in ${moduleDirectory}, then retry with Chrome installed (--browser overrides its path). Use --diagram-source only for an explicitly disclosed source-only fallback. Original error: ${error.message}`,{cause:error});
     }
-    diagrams=await renderDiagrams(doc,resolve(values.cache||`${dirname(resolve(source))}/.feature-doc-cache`),values.browser);
+    diagrams=await renderDiagrams(diagramDocument,resolve(values.cache||`${dirname(resolve(source))}/.feature-doc-cache`),values.browser);
   }
   let linkedPlan;
   if(values.plan) {
     const planHtml=resolve(values['plan-html'] || values.plan.replace(/\.json$/i,'')+'.html');
     linkedPlan=relative(dirname(target),planHtml).split('/').map(encodeURIComponent).join('/');
   }
-  const payload={document:doc,execution:state,diagrams,linkedPlan,specDigest:digest(doc)};
+  const payload={document:doc,technicalPlan:plan,execution:state,diagrams,linkedPlan,specDigest:digest(doc)};
   const css=await readFile(new URL('../assets/reader.css',import.meta.url),'utf8');
   const script=await readFile(new URL('../assets/reader.js',import.meta.url),'utf8');
   const scriptHash=createHash('sha256').update(script).digest('base64');
   const safeJson=JSON.stringify(payload).replace(/</g,'\\u003c').replace(/\u2028/g,'\\u2028').replace(/\u2029/g,'\\u2029');
   const html=`<!doctype html><html lang="${doc.locale}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-${scriptHash}'; style-src 'unsafe-inline'; img-src data: blob:; font-src 'none'; connect-src 'none'; base-uri 'none'; form-action 'none'"><title>${escape(doc.title)}</title><style>${css}</style></head><body><div id="app">${renderDocument(payload)}</div><script type="application/json" id="document-data">${safeJson}</script><script>${script}</script></body></html>`;
   await output(target,html);
-  print({html:target,bytes:Buffer.byteLength(html),document:basename(source),warnings:[...coverageGaps(doc), ...(values['diagram-source'] && doc.entries?.some(entry=>entry.diagram) ? ['Diagrams shown as source; SVG compilation was explicitly skipped.'] : [])]});
+  print({html:target,bytes:Buffer.byteLength(html),document:basename(source),warnings:[...coverageGaps(doc), ...(values['diagram-source'] && diagramDocument.entries?.some(entry=>entry.diagram) ? ['Diagrams shown as source; SVG compilation was explicitly skipped.'] : [])]});
 }
 main().catch(error=>{console.error(`error: ${error.message}`);process.exitCode=1;});

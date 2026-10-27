@@ -1,117 +1,96 @@
-# Architecture and Technical PRD
+# One implementation plan
 
-## Pre-draft evidence
+Gate B approves the implementation logic and task graph together. Technical JSON owns
+design entries; implementation JSON owns requirements, tasks and checks. Render them
+together; do not produce two approval documents or repeat narrative across them.
 
-Apply the bundled document module's gates before proposing architecture:
+## Inspect before proposing
 
-1. Use [reuse scouting](reuse-scouting.md) to identify reusable components, contracts, types, hooks,
-   utilities, feature flags, fixtures, and scripts with exact paths.
-2. Identify shared surfaces and their consumers. Prefer a local extension. When an
-   in-place shared edit is unavoidable, require backward compatibility and a regression
-   check.
-3. Resolve sources in this order: user instruction > supplied design > business document >
-   existing code. Surface contradictions before drafting.
-4. When the feature or a substantial part of it is commonly solved by maintained
-   libraries, search current official documentation and package registries before
-   designing it from scratch. Prefer an existing project dependency when suitable.
-   Compare build versus adopt on repository fit, covered edge cases, maintenance,
-   security, license, bundle/runtime cost, and escape hatch. Do not perform package
-   research for a trivial helper.
+Use [reuse scouting](reuse-scouting.md) to find relevant owners, contracts, components
+and tests. Inspect affected consumers. Show only reuse decisions that affect the change,
+with exact paths; keep exhaustive search logs out of the plan. Extend local code where
+practical and check compatibility for shared changes.
 
-Also build an impact map from each proposed contract owner to all writers, readers,
-callers, defaults, UI/export surfaces, caches, jobs, providers, and legacy paths.
+For substantial functionality commonly provided by maintained libraries, verify current
+official documentation before designing it from scratch. Compare repository fit, missing
+behavior and material costs. Do not research packages for a trivial helper or present an
+exhaustive survey. Surface consequential contradictions before approval.
 
-## Architecture process
+## Explain the logic
 
-Start from constraints and change pressure, not fashionable patterns:
+Lead with the proposed flow and rule ownership, using repository/domain names. Include
+changed contracts, invariants and failure paths that affect implementation. Show formulas
+or compound decisions with meaningful inputs and one small example; add units, rounding,
+null/zero behavior or ordering where relevant.
 
-1. Describe the current relevant architecture and the concrete limitation.
-2. Define the desired boundaries, invariants, ownership, and data flow.
-3. When a choice materially affects contracts, coupling, operations, migration, or long-
-   term maintenance, compare the recommendation with one credible alternative, usually
-   the minimal/no-new-pattern option. Skip alternatives for obvious local decisions.
-4. Compare only the dimensions that could change the decision; avoid exhaustive tables.
-5. Recommend one option and state its costs. Avoid speculative extensibility.
+Use UML-style Mermaid as the primary explanation when interactions or state are easier
+to understand visually:
 
-Add a decision record only for a consequential selected pattern or architecture choice:
+- sequence diagram for the main request/event flow and significant failure/retry paths;
+- class/domain diagram for meaningful entities, relationships and invariants that change;
+- state diagram for a lifecycle or transition rule;
+- component/dependency view when ownership or dependency direction changes.
 
-| Field | Required content |
-|---|---|
-| Problem | Specific problem in this feature |
-| Forces | Constraints and competing concerns |
-| Chosen pattern | Pattern and concrete repository mapping |
-| Alternative | One credible option, usually the simplest one |
-| Why chosen | Evidence-based advantage in this context |
-| Consequences | Complexity, coupling, testing and operational costs |
-| Revisit when | Observable condition that invalidates the choice |
+Choose the smallest useful set. A diagram must answer an implementation question and
+agree with contracts and task ownership. Follow it with a short explanation of the
+non-obvious point, not a prose transcription. Omit irrelevant diagram types without a
+section explaining each omission. The renderer derives the task DAG.
 
-State **No named pattern required** when ordinary functions, modules, or existing
-repository conventions solve the problem cleanly.
+Describe consequential decisions in a few sentences: recommendation, why it fits, and
+material cost. Include one alternative only if it could realistically change the decision.
+No mandatory pattern catalog, ADR field table or speculative framework. Add migration,
+auth, rollout, observability or deployment details only when affected.
 
-## UML rules
+Before presentation, apply a read-only SOLID critique through
+[specialist routing](../modules/review/references/specialist-reviews.md), or use the
+[bundled modular design guide](../modules/development/references/modular-design.md).
+Check responsibility, dependencies and one actual extension/variation scenario. Resolve
+concrete weaknesses without creating interfaces for imagined needs. Use the
+[security adapter](../modules/review/references/security-audit-integration.md) for focused
+trust-boundary guidance when relevant, not an automatic full audit. This preparation
+adds no formal review round or gate and authorizes no feature-code edits.
 
-Use Mermaid UML-style diagrams and keep their source in the Gate B technical plan. Include only diagrams
-that answer a decision or implementation question:
+## Decompose for parallel implementation and small PRs
 
-- flowchart or component diagram for ownership and dependencies;
-- sequence diagram for multi-party request, event, retry, or async flows;
-- class/domain diagram whenever the feature adds or changes meaningful entities, value
-  objects, services, invariants, or relationships; if omitted, state why the feature has
-  no useful class/domain model to show;
-- state diagram for lifecycle, permissions, transitions, or failure recovery;
-- deployment diagram only when runtime topology changes.
+Each CODE task owns one coherent behavior, prerequisite refactor, or integration change
+that a human can understand in its own diff. Include directly related behavioral tests.
+Avoid separate test-only tasks for every implementation task or arbitrary file-count
+splits that leave each PR incomprehensible or broken.
 
-Every diagram must agree with the written contracts and use repository/domain names.
-Follow it with a short interpretation and the decision it supports. Update diagrams when
-the approved design changes.
+1. Identify the minimal shared contract/primitive, if needed. Reuse existing contracts;
+   do not make an artificial framework task a universal blocker.
+2. Separate independently implementable consumers, adapters or behavior slices with
+   disjoint write scopes. Describe shared interfaces before dispatch.
+3. Add `dependsOn` only when a task consumes another task's output. A sequence number,
+   shared language or common requirement is not a dependency.
+4. Give shared wiring/configuration to one named task or coordinator-owned integration
+   task. Serialize that surface, not the entire feature. Narrow overlapping ownership
+   safely or add a real dependency; no concurrent writes to the same file.
+5. Inspect graph width and proposed PR boundaries before Gate B. Show parallel groups.
+   If a chain is unavoidable, state the specific dependency briefly.
 
-## Calculations and non-obvious logic
+Example: `contract -> {CSV adapter, HTML view} -> route wiring`, with behavioral tests
+inside each implementation task and human acceptance after delivery. If the contract
+already exists, the adapters may start immediately. Use concrete paths in `scope`, with
+a trailing slash for owned subtrees; avoid `src/` as every task's blanket scope.
+Record excluded/shared surfaces with `forbiddenScope` when needed.
 
-Gate B is the technical teaching document. Identify every formula, score, allocation,
-threshold, ordering rule, eligibility condition, or compound boolean that a reviewer
-could not infer immediately. For each relevant rule, show:
+Use [delivery guidance](delivery.md) to check PR size and dependency bases. Prefer a few
+hundred handwritten changed lines when practical; around 400 merits a split check and
+around 1,000 usually needs decomposition or a specific indivisible reason. These are
+local planning alerts, not Git rules or hard ceilings. Account for generated/vendor/lock
+changes separately. Never target a 15,000-line handwritten feature PR.
 
-- the formula or truth rule with named inputs;
-- units, ranges, precision, rounding, precedence, and boundary behavior;
-- one small worked example;
-- the plain-language reason for the rule and where it is owned in code;
-- failure, zero, null, and overflow behavior when relevant.
+## Acceptance and approval
 
-Do not manufacture mathematical formalism for ordinary CRUD or obvious conditions.
+Every requirement has a task and an appropriate check route in structured JSON. The
+renderer supplies traceability; do not maintain a duplicate matrix. Keep seeds minimal,
+deterministic, idempotent and guarded from production, with setup/cleanup. No seed is
+required where it adds no validation value. Tests protect behavior; meaningful accessor
+invariants count, trivial getters/setters do not.
 
-## Seeds and QA
-
-The seed plan must cover every specified behavior and relevant boundary condition with
-the smallest useful scenario set. Seeds must be deterministic, idempotent, guarded from
-production, use no real personal or secret data, and document setup plus cleanup/reset.
-Prefer existing factories and seed infrastructure.
-
-Separate:
-
-- automated tests that pass the bundled development test-value gate;
-- runtime/integration exercises;
-- manual UI, accessibility, visual, provider, or exploratory QA;
-- checks that cannot run locally and why.
-
-Create a traceability table with at least:
-
-| Requirement ID | Scenario | Risk/edge | Seed or fixture | Evidence route | Expected result | Status |
-|---|---|---|---|---|---|---|
-
-Do not turn a planned check into a claimed result. Static style, dimensions, getters,
-setters, tautological equality, trivial wiring, and framework behavior do not justify
-automated tests.
-
-## Gate C implementation PRD output
-
-Author `<feature>.prd.json` with the bundled document module implementation profile. Follow its
-compact authoring contract rather than copying a Markdown template. Reference the approved
-Gate B ID/revision and technical entry IDs. Keep requirements unique and acceptance observable.
-
-Code tasks record dependencies, write scope, acceptance IDs, validation and seed responsibility.
-Human-QA tasks record prerequisites, steps, expected observations and cleanup; they receive no
-implementation agent, simplifier, Argus pass or PR. The renderer derives the dependency map.
-
-Validate and render with `<skill-dir>/modules/prd/scripts/prd.mjs`. JSON is authoritative, HTML is the only
-human-facing deliverable, and run JSON holds actual evidence separately. New source changes
-invalidate stale run fingerprints; reopen affected gates instead of editing approved history.
+Author both JSON sources using the [compact contract](../modules/prd/references/authoring.md).
+Render one combined HTML with logic/UML, concise acceptance requirements, task DAG and
+checks. Present the link and material open decisions; ask once for Gate B approval of
+that exact pair of sources. No separate Gate C. Source changes invalidate run fingerprints;
+reopen affected approvals for substantive changes rather than editing approved history.

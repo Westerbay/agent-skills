@@ -47,17 +47,14 @@ Present a short feature contract containing:
 
 Ask for explicit approval. If the user changes the contract, revise it and ask again.
 
-## Gate B — technical-plan approval
+## Gate B — implementation-plan approval
 
-After scope approval, present the technical plan: architecture, relevant UML (including
-the class/domain model when applicable), package-versus-custom decisions, and any
-formulas or non-obvious rules explained in plain language. Clearly label what changes
-and what remains untouched. Keep alternatives brief and only for consequential choices.
-Ask the user to approve the technical plan or request revisions.
+Present one combined HTML focused on implementation logic, useful UML, non-obvious rules,
+relevant reuse and the CODE task graph. Include owned paths, true dependencies, parallel
+groups and small PR boundaries alongside concise acceptance/check routes. Keep decisions
+brief; omit irrelevant sections and repeated scope/architecture narrative.
 
-## Gate C — PRD approval
-
-After technical-plan approval, generate and render the lean implementation PRD. Reference
-Gate B instead of copying it. Show requirements, the separated `code` and `human-qa`
-tasks, dependencies, acceptance/QA traceability, risks, and any remaining open question.
-Implementation begins only after the user explicitly approves this exact revision.
+Ask once for approval of the exact technical and implementation source revisions together.
+This replaces the former separate B/C approvals. Implementation starts only after this
+combined Gate B and Gate A. A plan revision or changed task contract needs the affected
+approval renewed; a routine scoped implementation/refactor does not create a new gate.

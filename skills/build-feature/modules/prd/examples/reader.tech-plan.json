@@ -34,7 +34,7 @@
       "id": "CTR-001",
       "kind": "contract",
       "title": "Approved content remains identifiable",
-      "body": "A SHA-256 digest of canonical JSON links evidence to the exact PRD version. Editing requirements makes the previous execution record stale even if the revision number has not changed.",
+      "body": "Gate B approves the technical plan and execution tasks together. SHA-256 digests of both JSON sources bind evidence to that exact combined plan. Editing either source makes the previous execution record stale even if its revision number has not changed.",
       "global": true,
       "refs": [
         "DEC-001"
@@ -52,8 +52,8 @@
       "id": "FLOW-001",
       "kind": "flow",
       "title": "From JSON to a readable document",
-      "body": "Validation precedes rendering. HTML contains the readable view and source JSON. Agents consume a derived excerpt without opening the reader.",
-      "diagram": "flowchart LR\n  A[Source JSON] --> B[Validation]\n  B --> C[Standalone HTML]\n  B --> D[Task context]\n  E[Separate results] --> C",
+      "body": "Validation resolves task references against the technical plan before rendering one approval document. The reader shows technical logic, then tasks and checks. Each agent receives only its owned task and relevant contracts.",
+      "diagram": "sequenceDiagram\n  participant Author\n  participant Validator\n  participant Reader\n  participant Agent\n  Author->>Validator: Technical plan and execution tasks\n  Validator->>Validator: Validate IDs, references and dependency graph\n  Validator->>Reader: Combined plan with diagrams\n  Reader-->>Author: Gate B review\n  Author->>Agent: Approved task context\n  Agent-->>Reader: Separate execution evidence",
       "global": false,
       "refs": [
         "CTR-001",
@@ -64,8 +64,8 @@
       "id": "CALC-001",
       "kind": "calculation",
       "title": "Calculate ready tasks",
-      "body": "A task is ready when all dependencies are complete and the three approvals have been recorded. An active code task keeps priority until local delivery or its PR/MR. Acceptance tasks remain assigned to a person.",
-      "example": "CODE-002 depends on CODE-001. While CODE-001 awaits review or delivery, CODE-002 cannot start.",
+      "body": "After Gates A and B, a task can start once its dependencies have validated implementations and its write scope does not overlap an active task. Independent tasks can run together. Review and corrections run on the integrated result after all code tasks validate; each task then retains its own local checkpoint or small PR/MR. Acceptance tasks remain assigned to a person.",
+      "example": "CODE-001 and CODE-005 can start together. Once CODE-001 validates, CODE-002 and CODE-003 can run concurrently because their write scopes are disjoint. They do not wait for CODE-001 to be published.",
       "global": false,
       "refs": [
         "CTR-001"
