@@ -1,0 +1,4 @@
+interface:
+  display_name: "Code Quality Review"
+  short_description: "Review readability, complexity and behavioral test value"
+  default_prompt: "Use $code-quality-review to review and refactor the current diff for readability, focused functions, clear naming, and valuable behavioral tests."

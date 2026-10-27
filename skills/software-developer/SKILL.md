@@ -7,6 +7,9 @@ description: Default base workflow to implement, fix, refactor, or extend softwa
 
 Deliver the smallest maintainable change that fits the repository, preserves existing
 paths, and can be meaningfully exercised.
+Choose clear names, cohesive responsibilities, and useful extension boundaries while
+implementing each behavior. Refactor the changed code as part of delivery, not only
+when a later review requests it.
 
 ## Portable use and authorization
 
@@ -42,7 +45,8 @@ Before editing:
 1. Read applicable repository instructions, docs and ADRs, nearby code and tests,
    schemas, current git state, and relevant history. Preserve unrelated user work.
 2. State the observable change, behavior that must remain unchanged, affected public or
-   persisted contracts, and validation route.
+   persisted contracts, and validation route. Before adding a rule or supported variant,
+   identify its owning module and the callers that should remain unaffected.
 3. Build a small impact map. Find the rule or contract owner, then trace every writer,
    reader, caller, omitted/default call site, UI/export surface, cache, background path,
    and provider boundary affected by the change. Search by symbol and by duplicated
@@ -61,6 +65,9 @@ Before editing:
    dependency means the feature should silently switch off.
 6. Match the repository's package manager, commands, architecture, naming, formatting,
    test style, comment style, and generated-file workflow.
+   Before authorized Git delivery, follow
+   [references/git-conventions.md](references/git-conventions.md): English
+   `type(scope): summary` commits and `<type>/<short-kebab-case-description>` branches.
    Prefer rebase over merge commits when synchronizing feature branches. This preference
    does not authorize rewriting published history or force-pushing; obtain explicit
    authorization for those actions.
@@ -74,6 +81,9 @@ Re-plan when evidence invalidates it.
 ## 2. Work in vertical behavior slices
 
 - Implement one observable behavior at a time.
+- After that behavior works, simplify its names, decisions, and responsibilities before
+  starting the next slice. Apply justified local refactors within the implementation
+  scope; do not merely leave recommendations for problems introduced by this change.
 - For meaningful business rules, regressions, backend logic, and silently breakable
   transformations with a useful observable test seam, follow the test workflow in
   [references/standalone-workflows.md](references/standalone-workflows.md). An installed
@@ -90,11 +100,16 @@ Re-plan when evidence invalidates it.
   only if it protects a non-trivial decision, business invariant, regression,
   transformation, failure mode, or integration contract and would fail for a plausible
   defect that matters to a caller or user.
-- Do not write tests for getters or setters, value echoing, tautological equality,
+- Do not write tests for trivial getters or setters, value echoing, tautological equality,
   constants, framework behavior, trivial wiring/pass-through code, or static component
   size, spacing, CSS classes, and visual styling. An equality matcher is fine when it
   proves a meaningful rule; it is not useful when it merely compares a value with the
   same value the test just assigned or passed in.
+- A getter or setter enforcing validation, normalization, or a state invariant does have
+  behavior worth protecting. Choose tests by the contract, not the method's shape.
+- Prefer fast unit tests for rules, real integration tests for boundaries, and a small
+  set of critical end-to-end journeys. Use the 80/15/5 portfolio guidance in the test
+  workflow when assessing a suite; never add filler or remove useful coverage for a ratio.
 - It is valid to add no tests when the change contains no behavior worth protecting.
   Do not create a test merely to increase coverage or to claim that testing occurred.
   Validate trivial code through the narrowest relevant existing check, runtime flow, or
@@ -108,13 +123,16 @@ Re-plan when evidence invalidates it.
 
 ## 3. Implement with repository-shaped boundaries
 
-- For React, UI, forms, client state, localization, or accessibility changes, read and
-  follow [references/frontend.md](references/frontend.md).
+- For web UI, route delivery/metadata, forms, client state, localization, or accessibility
+  changes, read and follow [references/frontend.md](references/frontend.md).
 - For persistence, transactions, migrations, external providers, or background side
   effects, read and follow
   [references/data-and-integrations.md](references/data-and-integrations.md).
-- For repeated validation, misleading names, dense conditions, or mixed orchestration,
+- For non-trivial logic, shared rules, or refactoring, read and
   apply [references/maintainability.md](references/maintainability.md).
+- Before adding responsibilities, supported variants, or cross-module dependencies,
+  apply [references/modular-design.md](references/modular-design.md) to choose coherent
+  ownership, SOLID contracts, and a structure that localizes the intended change.
 
 ### Scope and reuse
 
@@ -172,7 +190,8 @@ Re-plan when evidence invalidates it.
   predicate. Prefer guard clauses and one conceptual decision per condition. Place named
   intermediate values before the control statement; do not hide business rules inside a
   dense boolean expression. Avoid extracting a helper when one short, obvious condition
-  is clearer inline.
+  is clearer inline. Preserve short circuiting, property reads, call order, exceptions,
+  and logical versus bitwise semantics; naming an expression must not evaluate it early.
 - Treat a new complexity or lint suppression as evidence to revisit the boundary. Keep
   provider-neutral domain code free of provider-specific imports when a repository seam
   already exists. Treat line counts and complexity scores as investigation signals, not
@@ -231,9 +250,20 @@ Inspect the final diff, then replay the impact map against actual code:
 6. Check auth, ownership, permissions, privacy, enumeration, logs, query bounds, cache
    reuse, transaction boundaries, provider-call concurrency, generated artifacts, and
    deployed-resource replacement behavior where relevant.
+7. For changed module boundaries, replay the supported change scenario: verify the
+   intended callers use the new seam and that policy ownership and dependency direction
+   are clearer. For web changes, inspect emitted semantics and route delivery as well
+   as component source; include public/private indexing intent where relevant.
 
 Fix concrete problems found. Do not refactor unrelated pre-existing debt; report it
 separately when relevant.
+
+The bundled guidance is sufficient without other skills. When installed and relevant,
+`code-quality-review`, `solid-architecture-review`, and `web-review` can deepen a focused
+check or an explicitly requested review. Discover their actual installed paths rather
+than assuming sibling folders. Do not run every specialist for every change. For a
+requested security review, an available `security-audit` retains its own mode, read-only
+source, and execution-safety rules; ordinary development does not imply a full audit.
 
 ## 5. Validate and make the feature exercisable
 
@@ -275,8 +305,10 @@ Report:
   value through consumers and include varying parameters in cache identity.
   Obvious indices/increments do not need configuration; name ambiguous library sentinels.
 - Check branch base and repository naming conventions before creating a branch;
-  prefer `feat/<name>` for features when no convention exists. Avoid including commits
-  from another feature silently.
+  use the change type as the prefix, such as `feat/reader-export` or `fix/cache-key`,
+  rather than an agent-name prefix. Preserve an explicit user-selected name and do not
+  rename an existing branch merely to normalize it. Avoid including commits from
+  another feature silently.
 - Update documentation whose facts or procedures changed, removing obsolete information
   rather than appending a historical log.
 - For React/TypeScript query wrappers, tables, or pagination, also read

@@ -3,6 +3,11 @@
 Lead with verdict (`blocking`, `needs-attention`, `incomplete`, `pass`) and coverage
 confidence. Identify the exact baseline/result or branch/base, reviewed files, excluded
 material, light/full mode, and whether reviewers were independent or sequential passes.
+Identify selected specialist skills and the concerns they covered; distinguish bundled
+fallback, not-applicable checks, and checks that failed or remained unavailable. Do not
+claim a standalone skill was used merely because its criteria are summarized here.
+For `build-feature`, identify the cumulative feature snapshot and review round (at most
+two), and show which CODE tasks it contains. Report cross-task risks in this same review.
 
 Provide a compact counts table per reviewed dimension, sorted findings, missing/partial
 sections and validation limits. A finding contains severity, file/line, the concrete
@@ -15,3 +20,9 @@ The helper's confidence is a coverage measure; qualify it when independence is a
 Conclude with prioritized actionable findings and residual risks. Do not paste the entire
 diff, praise the code, speculate about intent, or imply any comment was posted. Review is
 read-only; the coordinator performs accepted fixes in a separate implementation step.
+In the final feature handoff, link accepted finding IDs to their owning CODE tasks,
+refactors, validation, and reviewed snapshot that resolved them. Keep deferred findings
+and their reasons visible. Each later task patch/PR references this shared review and its
+relevant findings; compare its content with the reviewed result before delivery. A new
+source edit invalidates that evidence rather than inheriting a clean verdict. Do not
+produce another review report per task merely to repeat the cumulative findings.

@@ -1,193 +1,127 @@
 ---
 name: build-feature
-description: Orchestrate a substantial software feature from guided discovery through an approved technical architecture, a lean implementation PRD, and task-by-task delivery where each code task is implemented, simplified, reviewed, and delivered locally or as a draft PR/MR. Use when the user wants the complete feature lifecycle, not for a small isolated change, a PRD-only request, or implementation from an already-approved specification.
+description: Orchestrate a substantial feature through scope approval, one concise implementation-plan approval, parallel code tasks, a final integrated review with refactoring, and small task-specific deliveries. Use for the complete feature lifecycle, not a small isolated change, a PRD-only request, or implementation from an already-approved specification.
 ---
 
 # Build Feature
 
-Turn an initial feature idea into an approved, implemented, reviewed, and reproducible
-change. This workflow deliberately spans multiple user turns. Keep the current phase,
-confirmed decisions, open questions, and approvals explicit so work can resume safely.
+Turn a feature idea into an approved, implemented, reviewed change. Keep the current
+phase, decisions and actual approvals explicit across turns. Use the user's language in
+conversation and the repository's language for artifacts.
 
-## Portable runtime
+## Runtime and approvals
 
-Resolve `<skill-dir>` as the directory containing this file. All modules and scripts are
-bundled under it; no other installed skill or MCP server is required. Read modules only
-when their phase applies. Node.js 22+ runs the document tools; Python 3.10+ and Git run
-the review helpers. Technical diagram compilation optionally needs the pinned npm
-dependencies and Chrome/Chromium; see [document setup](modules/prd/GUIDE.md).
-Before rendering Mermaid diagrams, follow that setup guide and use normal SVG compilation.
-Disclose any source-only fallback alongside the document link.
-
-Generated planning documents support copying each compiled diagram as a PNG
-image and displaying LaTeX formulas offline. Use the documented math delimiters in
-prose; keep source JSON authoritative. See [document setup](modules/prd/GUIDE.md).
-
-Use the user's language in conversation. Repository instructions and explicit user
-choices take precedence over style preferences. Use the actual repository tools and
-available agent capabilities, without hardcoded model names or vendor APIs.
-
-At Gate A, choose `local` (default) or `review-request` delivery explicitly. Local mode
-requires no hosting, issue tracker, messaging service, commits, or pushes. Preserve the
-three approval gates and record only explicit user decisions. Never infer consent from
-elapsed time, generated content, or a successful script exit.
-
-When subagents are supported and permitted, use separate implementation, simplification,
-and review roles. Otherwise perform distinct sequential passes in the current agent,
-cover every review dimension, and disclose that the review was not independent. Never
-pretend another agent ran. No automatic skill installation or service connection.
-
-## Non-negotiable gates
-
-Follow this state machine in order:
+Resolve `<skill-dir>` as this file's directory. Bundled modules work without companion
+skills or a hosting account. Node 22+ runs the document tools; Python 3.10+ and Git run
+review helpers. Read [document setup](modules/prd/GUIDE.md) before rendering Mermaid:
+compile diagrams normally and disclose any blocked source-only fallback. JSON is the
+source; generated HTML supports offline reading, math and copying diagrams as images.
 
 ```text
-Discovery -> Scope approval -> Technical-plan approval -> PRD approval
-          -> Code task 1 pipeline + delivery -> Code task 2 pipeline + delivery -> ...
-          -> Integrated verification -> Human acceptance
+Discovery -> Gate A: scope -> Gate B: implementation plan (logic + UML + task graph)
+          -> Ready CODE tasks in parallel -> Integration and validation
+          -> One simplification/review cycle -> Corrections and verification if needed
+          -> Small delivery per CODE task -> Human acceptance
 ```
 
-Do not write feature code before all three approvals. A later requirement change returns
-the workflow to the earliest affected gate. Approval of scope does not approve an
-architecture; approval of architecture does not approve implementation; local approval
-does not authorize commits, pushes, PR/MR creation, deployment, or another external write.
+There are two approvals. Gate B includes the former technical-plan and implementation
+PRD decisions; there is no separate Gate C. Do not write feature code before A and B.
+Return to the earliest affected gate for a material contract or scope change. Approval
+to implement does not authorize commits, pushes, external review requests or deployment.
 
-At the start, inspect applicable repository instructions, documentation, ADRs, current
-branch and `git status --short`. Preserve unrelated work. Resolve facts available in the
-repository before asking the user.
+At Gate A, choose `local` (default) or `review-request` delivery and record each authorized
+Git/external action. Use [Git conventions](modules/development/references/git-conventions.md):
+English `type(scope): summary` commits and `<type>/<short-kebab-case-description>`
+branches, including `build`, `chore`, `ci`, `docs`, `feat`, `fix`, `perf`, `refactor`,
+`revert`, `style` and `test` as appropriate. Do not prepend `codex/` to generated names.
+Keep explicit user names and existing work intact; naming rules do not authorize Git writes.
 
-## 1. Discover and approve the scope
+## 1. Approve the scope
 
-Read and follow [references/interview-and-gates.md](references/interview-and-gates.md).
-Use the bundled [document guide](modules/prd/GUIDE.md), asking only one to three
-focused questions at a time. Keep four explicit lists: confirmed requirements,
-assumptions, open questions, and out-of-scope items.
+Inspect repository instructions, relevant code/docs, branch and `git status --short`.
+Preserve unrelated edits. Follow [discovery](references/interview-and-gates.md), asking
+only questions that inspection cannot resolve. Present a concise contract: problem,
+observable outcomes, constraints, exclusions and delivery authority. Record the user's
+explicit approval as **Gate A — Scope approved**.
 
-End this phase with a concise feature contract: problem, users, desired outcomes,
-observable behaviors, exclusions, constraints, success signals, and delivery authority.
-Ask the user to approve it. Record approval as **Gate A — Scope approved**.
+## 2. Approve one implementation plan
 
-## 2. Design and approve the architecture
+Follow [architecture and planning](references/architecture-and-prd.md). Show how the
+logic will work using repository names, useful UML, important rules and a small reuse
+map. Explain consequential choices only. Do not fill generic architecture checklists,
+repeat the scope, manufacture alternatives or introduce speculative extension layers.
 
-Read and follow
-[references/architecture-and-prd.md](references/architecture-and-prd.md). Run the
-bundled document pre-draft gates, including [reuse scouting](references/reuse-scouting.md), before proposing new
-components or contracts.
+Include the CODE task graph in the same proposal. Each task should be one small coherent
+change with owned paths, real prerequisites and meaningful validation. Favor independent
+slices after a minimal shared contract; never chain tasks simply because they are listed
+in order. Make shared-file ownership and proposed parallel groups explicit. A task must
+be reviewable as its own PR/MR, including its directly related tests.
 
-Produce a technical plan proportional to the feature:
-
-- impact and reuse map;
-- current and proposed boundaries and data flow;
-- public API, data, auth, permission, background-job, cache, and integration effects;
-- relevant UML diagrams, including a class/domain diagram when the domain model changes;
-- formulas, algorithms, thresholds, units, rounding rules, and non-obvious conditions;
-- concise decision records only for consequential choices;
-- compatibility, migration, rollout, observability, and failure strategy where relevant;
-- risks, unresolved decisions, and implementation constraints.
-
-Patterns and alternatives are not goals. Prefer the simplest repository-shaped design.
-Compare at most the recommended option and one credible alternative, and only when the
-choice is consequential. For an obvious repository-standard choice, state it directly.
-Explain non-intuitive calculations and conditions in plain language so the user can
-review the reasoning, not merely the structure.
-
-Author the technical plan as `<feature>.tech-plan.json` using the bundled document module
-`kind: "tech-plan"` contract, with stable entry IDs and cross-cutting constraints marked global.
-Render its HTML through the same CLI. Present it before drafting the implementation PRD
-and ask for approval. Record approval
-as **Gate B — Technical plan approved**. Never interpret silence as approval.
-
-## 3. Produce and approve the implementation PRD
-
-Use the bundled document module JSON contract with `profile: "implementation"`. Author
-`<feature>.prd.json`; never create `<feature>.prd.md`. The JSON is authoritative for
-implementation. Reference the approved Gate B ID/revision and entry IDs; retain only
-constraints needed to execute. Requirements, checks, seeds and the `code`/`human-qa`
-task graph are structured data. Do not repeat architecture narrative or draw the graph.
-
-Render using the bundled document module CLI:
+Use the [document contract](modules/prd/references/authoring.md): concise technical entries
+in `<feature>.tech-plan.json`, requirements/tasks/checks in `<feature>.prd.json` with
+`profile: "implementation"`. These are two internal sources for **one human-facing plan**;
+reference entry IDs rather than copying narrative. Render one combined HTML:
 
 ```bash
 node <skill-dir>/modules/prd/scripts/prd.mjs validate <feature>.prd.json --plan <feature>.tech-plan.json
 node <skill-dir>/modules/prd/scripts/prd.mjs render <feature>.prd.json --plan <feature>.tech-plan.json
 ```
 
-Initialize `<feature>.run.json` and record the actual Gate A/B decisions and their user
-message references, following [execution reference](modules/prd/references/execution.md). Present only the HTML path,
-key risks and open decisions; ask for explicit Gate C approval. Record **Gate C — PRD
-approved for implementation** against this exact source revision and fingerprint.
-Keep source JSON and execution records local; do not publish planning artifacts unless
-explicitly asked. No command infers consent from file contents or silence.
+Apply a focused read-only SOLID/design critique using
+[specialist routing](modules/review/references/specialist-reviews.md) before presenting
+the plan; this is preparation, not an extra formal review round. Show the HTML, only
+material unresolved decisions, and ask for **Gate B — Implementation plan approved**.
+That approval binds both sources and their task graph. Follow the
+[execution reference](modules/prd/references/execution.md) to record real user decisions
+and fingerprints in local run JSON. Never infer consent from silence or tool success.
 
-Do not start implementation while requirements, architecture decisions, acceptance
-criteria, task dependencies, or required delivery authority remain materially unclear.
+## 3. Implement ready CODE tasks
 
-## 4. Deliver code tasks one at a time
+Follow [orchestration](references/implementation-orchestration.md). Dispatch a safe batch
+of dependency-ready tasks to separate subagents when supported and permitted; otherwise
+implement sequentially and disclose that limitation. Give each writer a bounded context,
+owned paths and a return contract. Only one writer owns a shared surface at a time.
 
-Read and follow
-[references/implementation-orchestration.md](references/implementation-orchestration.md).
-Use the PRD task graph as the implementation contract. Do not dispatch all ready tasks at
-once. Select one ready `code` task and complete its entire pipeline before starting the
-next code task. Use one implementation subagent when available and permitted; otherwise implement it
-in the current agent. The coordinator owns shared surfaces and final integration.
+Each task follows the [development guide](modules/development/GUIDE.md): implement the
+behavior, keep the code clear, run targeted meaningful checks, and save an attributable
+checkpoint. `validated` releases dependent implementation work; it does not mean reviewed
+or delivered. Do not run a separate simplifier, specialist review or correction ceremony
+for every CODE task. Fixing a failing local check remains part of implementation.
 
-`human-qa` tasks are acceptance instructions for a person, not coding work: do not send
-them to implementation agents, simplify them, run Argus on them, or create PRs for them.
-A seed, fixture, migration, test, script, configuration change, or documentation change
-made in the repository is a `code` task even when its main purpose is acceptance.
+Use TDD when it protects meaningful behavior. Reuse sufficient existing tests; no forced
+test per method, getter, trivial wiring or behavior-preserving refactor. Check the
+80/15/5 unit/integration/E2E preference as a portfolio signal, never a deletion quota.
+Record runtime/manual routes where they provide the appropriate evidence.
 
-Each implementation pass must follow the bundled
-[development guide](modules/development/GUIDE.md), including its standalone test workflow
-only when a test protects meaningful behavior. Seed data is not a substitute for tests and tests are not
-required for trivial behavior. Every implemented requirement must still have an
-automated check, runtime exercise, or manual QA route recorded in the traceability
-matrix.
+## 4. Review and refactor the integrated feature
 
-For each code task, complete this checkpoint before starting any other code task:
+After all CODE tasks are validated, integrate their results and verify their contracts.
+Run the [simplifier](references/simplifier.md) once on the combined change, then affected
+checks. Use [bundled review](modules/review/GUIDE.md) on one immutable cumulative feature
+diff. Route quality, SOLID, web and security to available standalone skills only when
+applicable; those skills remain independently usable and are not embedded here.
 
-```text
-implementation -> targeted validation -> simplification -> validation
-               -> review light -> fix verified findings -> validation
-               -> local delivery or authorized draft PR/MR
-```
+Reviewers are read-only. A separate writer applies accepted fixes and useful refactors,
+including across task boundaries, while preserving approved behavior and task ownership.
+Map each correction back to its delivery patch. Validate the corrected result and review
+the fresh cumulative snapshot once more when needed. All specialists together count as
+one round: at most two feature review rounds, never two per task. Unresolved material
+findings or incomplete coverage block delivery and require a concrete user decision.
 
-The simplifier is the internal role defined in
-[references/simplifier.md](references/simplifier.md). For security-relevant reviews, the
-[bundled review adapter](modules/review/references/security-audit-integration.md) loads
-Cloudflare's optional `security-audit` skill when installed, selecting mode from the user's
-request and preserving safe execution and evidence requirements.
-[Bundled review](modules/review/GUIDE.md) remains read-only;
-use a separate focused implementation pass to fix accepted findings. Re-run a task review at most once
-after fixes. If material warnings remain after two review passes, stop that dependency
-chain and ask the user rather than looping indefinitely. Delivery follows [delivery modes](references/delivery.md). Local mode ends each task at
-`delivered-local`; review-request mode ends at an authorized draft PR/MR. Missing
-publication authority blocks that mode at `ready-to-open`; do not silently change modes.
+## 5. Deliver small changes and prepare acceptance
 
-## 5. Verify the delivered task chain and prepare acceptance
+Once the integrated result is ready, follow [delivery](references/delivery.md): one local
+checkpoint or one authorized draft PR/MR per CODE task. Keep each actual base/head diff
+small and coherent. Use independent branches for independent slices and explicit stacked
+bases for real dependencies; a task PR must not contain the cumulative feature diff.
+Verify every delivery matches the reviewed result. Publication requires recorded authority.
 
-After all code-task deliveries:
+Record observed checks and delivery links, then re-render the same plan. Hand off actual
+behavior, checks, remaining risks and reproducible `human-qa` steps. Human QA is acceptance
+by a person; never dispatch it as implementation or create a PR for it. Only an actual
+human acceptance message may be recorded as `accepted`. Keep planning documents local
+unless their publication was explicitly requested. Never merge or deploy in this skill.
 
-1. Replay the PRD acceptance and impact maps across the integrated diff.
-2. Run relevant type, lint, build, behavior, integration, migration, and security checks
-   proportional to risk.
-3. Exercise the documented seeds and QA scenarios when the environment permits, and
-   record actual results separately from planned checks.
-4. Inspect cross-task contracts and run a full Argus review only when the combined change
-   introduces integration risk not already covered by the per-task reviews. Do not add a
-   ceremonial duplicate review.
-5. Record actual task/check evidence in the separate run JSON and re-render the HTML.
-6. Re-explain the delivered behavior, architecture, pattern consequences, files and
-   contracts changed, validation evidence, manual QA plan, residual risks, and intentional
-   non-changes.
-7. Hand the user the separate `human-qa` tasks with seed commands, steps, and expected
-   results. Do not create a PR for the act of acceptance itself.
-
-Never merge or deploy as part of this skill. A draft PR/MR is the terminal external action in review-request mode.
-
-## Completion criteria
-
-The workflow is complete only when every code task has passed its pipeline and has its recorded local delivery or authorized draft PR/MR, integrated validation has completed or has a reported blocker,
-and human-QA instructions are reproducible. Stop when the approved behavior is clear,
-maintainable, and sufficiently validated; do not add speculative abstractions, exhaustive
-documents, duplicate tests, or extra review ceremonies in pursuit of “surquality”. Report
-skipped checks and residual risk without converting planned tests into claimed results.
+Finish when the approved behavior is delivered and the acceptance handoff is reproducible;
+report pending human acceptance separately. Do not add speculative abstractions, duplicate
+tests or further review ceremonies after the required checks have passed.

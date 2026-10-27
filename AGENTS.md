@@ -130,6 +130,10 @@ data protection, or quality expectations. Follow the host agent's instruction hi
   Preserve runtime localization and follow the user's language in conversation.
 - Use Conventional Commits: `type(scope): summary`. Keep the summary concise and
   describe the resulting change. Follow the existing skill names for scopes when useful.
+- Name agent-created branches `<type>/<short-english-kebab-case-description>`, using
+  `build`, `chore`, `ci`, `docs`, `feat`, `fix`, `perf`, `refactor`, `revert`, `style`, or
+  `test` according to the work. Do not add a `codex/` prefix. Preserve explicit user
+  branch names and existing branches; naming rules do not authorize Git mutations.
 - Preserve each skill's bundled resources and relative paths. Keep mirrored
   development guidance consistent when changing a shared rule.
 - Validate changes with `node scripts/validate-skills.mjs`, the existing Node document

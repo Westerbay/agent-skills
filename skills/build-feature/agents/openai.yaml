@@ -1,4 +1,4 @@
 interface:
   display_name: "Build Feature"
   short_description: "Scope, design, build, review, and deliver a feature"
-  default_prompt: "Use $build-feature to scope, architect, document, implement, review, and deliver this feature using the chosen local or PR/MR workflow."
+  default_prompt: "Use $build-feature to approve scope and one concise UML-backed implementation plan, implement independent small tasks in parallel, review and refactor the integrated feature once, then deliver one checkpoint or authorized draft PR/MR per task with English conventional Git names."

@@ -207,9 +207,7 @@
       "kind": "code",
       "title": "Automate Argus review mechanics",
       "goal": "Validate and aggregate without hiding errors.",
-      "dependsOn": [
-        "CODE-004"
-      ],
+      "dependsOn": [],
       "requirementIds": [
         "FR-006"
       ],

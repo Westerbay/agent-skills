@@ -63,35 +63,60 @@ test('technical plan has an explicit offline diagram-source fallback',async()=>{
       const result=execFileSync(process.execPath,[join(root,'scripts/prd.mjs'),'render',source,'--diagram-source','--out',out],{encoding:'utf8'});
       assert.match(JSON.parse(result).warnings.join(' '),/SVG compilation/);
       const html=await readFile(out,'utf8');
-      assert.ok(html.includes('flowchart LR'));
+      assert.ok(html.includes('sequenceDiagram'));
       assert.ok(html.includes(label),`Missing ${locale} diagram fallback label`);
       assert.ok(html.includes(`lang="${locale}"`));
     }
   }finally{await rm(dir,{recursive:true,force:true});}
 });
 
-test('CLI local checkpoint persists, releases dependent work and renders the delivered status',async()=>{
+test('CLI runs parallel implementation, one combined review, and separate local deliveries',async()=>{
   const dir=await mkdtemp(join(tmpdir(),'feature-doc-local-'));
   const root=fileURLToPath(new URL('../',import.meta.url));
   const source=join(root,'examples/reader.prd.json');
   const plan=join(root,'examples/reader.tech-plan.json');
   const state=join(dir,'run.json');
-  const cli=(command,...args)=>JSON.parse(execFileSync(process.execPath,[join(root,'scripts/prd.mjs'),command,source,'--plan',plan,'--state',state,...args],{encoding:'utf8'}));
+  const cli=(command,...args)=>JSON.parse(execFileSync(process.execPath,[join(root,'scripts/prd.mjs'),command,source,'--plan',plan,'--state',state,...args],{encoding:'utf8',stdio:'pipe'}));
   try {
     cli('init-run','--delivery','local');
     assert.equal(cli('next').status,'blocked');
-    for(const gate of ['A','B','C']) cli('approve','--gate',gate,'--revision','1','--evidence','Synthetic test-only user approval');
-    const first=cli('next').taskId;
-    for(const phase of ['implemented','validated','simplified','revalidated','reviewed','ready-to-open','delivered-local'])
-      cli('record-task',first,'--phase',phase,'--evidence','Synthetic observed test evidence');
+    for(const gate of ['A','B']) cli('approve','--gate',gate,'--revision','1','--evidence','Synthetic test-only user approval');
+    const first=cli('next').taskIds[0];
+    let next=cli('next');
+    let sawParallelBatch=false;
+    while(next.status==='ready') {
+      sawParallelBatch ||= next.parallelTaskIds.length>1;
+      for(const id of next.parallelTaskIds) cli('record-task',id,'--phase','started','--evidence','Synthetic owned scope claim');
+      for(const id of next.parallelTaskIds) {
+        for(const phase of ['implemented','validated']) cli('record-task',id,'--phase',phase,'--evidence','Synthetic observed task checks');
+      }
+      next=cli('next');
+    }
+    assert.equal(sawParallelBatch,true);
+    assert.equal(next.status,'feature');
+    assert.throws(()=>cli('record-task',first,'--phase','ready-to-open','--evidence','Attempt to skip final review'),/final feature review/);
+    for(const phase of ['integrated','validated','simplified','revalidated','reviewed','ready-to-deliver'])
+      cli('record-feature','--phase',phase,'--evidence','Synthetic observed cumulative feature evidence');
+    while((next=cli('next')).status==='delivery') {
+      for(const id of next.taskIds) {
+        for(const phase of ['ready-to-open','delivered-local']) cli('record-task',id,'--phase',phase,'--evidence','Saved synthetic task checkpoint');
+      }
+    }
+    assert.equal(next.status,'human-qa');
     const saved=JSON.parse(await readFile(state,'utf8'));
     assert.equal(saved.deliveryMode,'local');
     assert.equal(saved.tasks[first].phase,'delivered-local');
-    assert.notEqual(cli('next').taskId,first);
+    assert.equal(saved.feature.reviewPasses,1);
+    assert.equal(saved.schemaVersion,2);
     const out=join(dir,'result.html');
-    cli('render','--out',out);
+    const rendered=cli('render','--out',out,'--diagram-source');
+    assert.match(rendered.warnings.join(' '),/SVG compilation/);
     const html=await readFile(out,'utf8');
     assert.ok(html.includes('Delivered locally'));
     assert.ok(!html.includes('>delivered-local<'));
+    assert.ok(html.includes('sequenceDiagram'));
+    assert.ok(!html.includes('Gate C'));
+    const payload=JSON.parse(html.match(/id="document-data">([^]*?)<\/script>/)[1]);
+    assert.equal(payload.technicalPlan.id,'feature-documents-plan');
   }finally{await rm(dir,{recursive:true,force:true});}
 });

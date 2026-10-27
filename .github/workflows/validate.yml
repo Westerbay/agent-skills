@@ -19,5 +19,7 @@ jobs:
         with:
           python-version: '3.12.16'
       - run: node scripts/validate-skills.mjs
+      - run: node scripts/validate-security-audit-vendor.mjs
+      - run: node --test skills/security-audit/*.test.cjs
       - run: node --test skills/build-feature/modules/prd/tests/*.test.mjs
       - run: python -m unittest discover -s skills/build-feature/modules/review/tests -p 'test_*.py'

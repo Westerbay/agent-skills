@@ -1,8 +1,8 @@
 # Maintainability at the change boundary
 
-Use this guide when repeated rules, unclear names, or control flow make the changed code
-hard to follow. Keep the repository's conventions and the authorized behavior as the
-contract. A clean-code pass should make ownership and execution easier to verify.
+Use this guide while implementing or refactoring names, decisions, and shared rules.
+Keep the repository's conventions and the authorized behavior as the contract. Make
+ownership and execution clear as the code is written, not only during a cleanup pass.
 
 ## Repeated validation and literals
 
@@ -37,6 +37,13 @@ The second form is justified by shared semantics and real consumers. It is not a
 to create a generic `isValidId` for unrelated identifiers. Verify parity through existing
 consumer tests and a focused regression case when the substitution has a plausible risk.
 
+Name unexplained limits, sentinels, conversion factors, and durations at their semantic
+owner, reusing an existing contract or protocol constant where appropriate. Search by
+meaning as well as value: equal literals for independent policies must not become one
+shared setting. Conversely, different names for the same policy still need one owner.
+Verify that consumers use the authoritative value and that changing it has the intended
+effect. Obvious indices and increments need no constant; avoid a global constants dump.
+
 ## Types after validation
 
 Trace where an untrusted value acquires a domain meaning. Keep `unknown` at that real
@@ -65,16 +72,28 @@ to asserting an unvalidated domain object; apply any explicit repository restric
   clear whether it reserves an upload, transfers bytes, or publishes the result. A
   callback runner that owns cancellation might be `withRequestCancellation`; a boolean
   might be `hasMatchingSelection`. Avoid vague `check`, `handle`, `data` or `id` when the
-  surrounding scope does not disambiguate them.
-- Prefer early guards for invalid states and name compound domain decisions. Keep the
-  obvious single comparison inline. Do not merge distinct errors, reorder effectful
-  expressions, or hide important branching behind a generic helper merely to shorten it.
+  surrounding scope does not disambiguate them. Expose meaningful units and lifecycle:
+  `retryDelayMs` is a duration, `expiresAtUtc` a timestamp, and `hasReservedCapacity` a
+  completed action rather than permission to reserve. Prefer positive predicates and
+  check serialized fields, reflection, and external consumers before renaming a contract.
+- Prefer early guards for invalid states and name compound domain decisions by their
+  meaning: `hasOutstandingBalance` and `isWithinGracePeriod`, not `reasonA` and `reasonB`.
+  Keep an obvious single comparison inline. Do not merge distinct errors or hide
+  important branching behind a generic helper merely to shorten it.
+- Preserve short circuiting, evaluation order, call count, and exceptions when naming
+  intermediate expressions. A property read may invoke a getter; an operand behind
+  `&&`, `||`, optional access, or a guard must not become eagerly evaluated. Retain the
+  guard or use a lazy predicate when necessary. Preserve precedence, coercion, and the
+  distinction between bitwise and logical operators, including XOR semantics.
 - A sequence of guards is often readable. Inspect the decisions and their dependencies,
   not just the count of `if` statements. Follow the repository's brace and formatting rules.
-- Split a long orchestration function along coherent operations, such as loading and
-  validating a job, publishing its preview, and publishing its result. Keep lifecycle
-  ownership visible in the caller. Avoid a helper per line or a generic framework whose
-  switches reproduce the original complexity.
+- Keep functions cohesive and orchestration at a consistent level of abstraction.
+  Extract a meaningful operation or independently changing rule, such as loading a job
+  or publishing its result. Keep lifecycle ownership visible in the caller; prefer a
+  local/private helper until actual consumers justify sharing. Numerous parameters,
+  unrelated outputs, or mutable shared state can reveal an unsuitable extraction.
+  Inline pointless forwarding wrappers; do not create a helper per line, expose private
+  code solely for testing, or add a framework whose switches reproduce the complexity.
 - Before moving code, record the relevant execution guarantees: authorization before
   protected access, lock and transaction lifetime, separately committed reservations,
   conditional state transitions, retries, cancellation, external side-effect order and
@@ -87,12 +106,18 @@ responsibilities, the concrete change/verification burden, and the smallest usef
 Verify the proposed owner and all affected consumers. Give a short before/after example
 when the improvement is otherwise hard to assess; label it as a proposal.
 
+Use existing analyzers to investigate function/file LOC, nesting, cyclomatic or cognitive
+complexity, and duplicated rules when relevant. Record scope, counting method, and tool
+configuration for numerical claims; distinguish physical lines from nonblank/noncomment
+lines and exclude generated/vendor code. Label manual estimates. Respect repository
+thresholds; without them, inspect the largest relevant hotspots rather than inventing a
+universal LOC ceiling. Lowering a score by hiding control flow is not an improvement.
+
 Respect existing review scope and severity. Separate a documented convention violation
-from a supported maintainability concern and a personal preference. Repetition counts,
-function lengths, and lint scores alone do not establish impact. Generated schemas,
-necessary cross-language implementations and distinct boundary checks are not automatic
-extraction candidates. Small similar blocks can remain separate when sharing would add
-options, coupling, or obscure their different behavior.
+from a supported maintainability concern and a personal preference. Metrics alone do not
+establish impact. Necessary cross-language implementations and distinct boundary checks
+are not automatic extraction candidates. Small similar blocks can remain separate when
+sharing would add options, coupling, or obscure their different behavior.
 
 ## Sources and scope
 
@@ -103,8 +128,10 @@ These are references for judgment, not replacement repository policies:
 
 - [Google TypeScript style guide](https://google.github.io/styleguide/tsguide.html) and
   [PEP 8](https://peps.python.org/pep-0008/) for language-specific naming and consistency.
-- [Martin Fowler: guard clauses](https://refactoring.com/catalog/replaceNestedConditionalWithGuardClauses.html)
-  for reducing nested control flow while retaining explicit guards.
+- [Martin Fowler: guard clauses](https://refactoring.com/catalog/replaceNestedConditionalWithGuardClauses.html),
+  [Decompose Conditional](https://refactoring.com/catalog/decomposeConditional.html), and
+  [Extract Function](https://refactoring.com/catalog/extractFunction.html) for exposing
+  decisions and cohesive work without prescribing a function-length quota.
 - [Sandi Metz: the wrong abstraction](https://sandimetz.com/blog/2016/1/20/the-wrong-abstraction)
   for evaluating the cost of sharing superficially similar code.
 - [ESLint complexity](https://eslint.org/docs/latest/rules/complexity) and

@@ -38,12 +38,18 @@ planRefs: string[], seedIds: string[]}`. Dependencies reference task IDs in this
 planRefs reference entry IDs in its technical plan.
 
 - `code`: add `goal`, `scope: string[]`, optional `forbiddenScope: string[]`,
-  `validation: string[]`. A code task has a local delivery checkpoint or one authorized draft PR/MR, according to the selected delivery mode.
+  `validation: string[]`. Use concrete repository-relative files or subtrees (trailing
+  slash) as write scopes; broad/glob/unknown scopes prevent safe parallel claims. Each
+  task is one coherent small change with its related meaningful tests, yielding one
+  local checkpoint or authorized draft PR/MR after the integrated feature review.
 - `human-qa`: add `steps: string[]`, `expected`, `cleanup`. No code scope or implementation
   agent. A committed seed/script/test/doc change is a code task, not human QA.
 
 Read `examples/reader.prd.json` only when a complete example helps. Keep requirements and
 technical constraints in their owners; reference IDs instead of repeating paragraphs.
+Dependencies represent required outputs, not list order. Independent disjoint scopes can
+run in parallel; assign shared wiring to one owner. CODE cannot depend on post-delivery
+human QA. The renderer derives parallel graph levels; do not draw a duplicate task diagram.
 
 ## Technical plan
 
@@ -57,7 +63,8 @@ Explain existing/proposed ownership, invariants, API/data/auth effects and impor
 calculations proportionally to the feature. A consequential decision compares at most
 one credible alternative. Calculations state inputs, units, boundaries, rounding and a
 worked example. Diagrams answer a question; class/domain diagrams apply when meaningful
-entities change. Otherwise explain the omission in prose. Avoid named patterns without need.
+entities change. Omit irrelevant categories rather than explaining every absent diagram.
+Avoid named patterns without need and keep decision prose brief.
 
 Mark cross-cutting constraints `global: true`. Link entry dependencies with `refs`.
 `task-context` includes global entries and the transitive references of the task and its
@@ -68,8 +75,14 @@ Read `examples/reader.tech-plan.json` only if needed.
 
 ## Revision and migration
 
+For build-feature, these two source documents produce one combined HTML and one Gate B
+approval, binding both fingerprints and the task graph. Do not repeat design narrative in
+the implementation PRD or ask for a separate Gate C.
+
 Bump revision for a substantive source change; reopen the earliest affected approval gate.
 The execution fingerprint also detects edits that forgot to bump revision. Initialize a
 new run record and record only approvals still valid for this exact scope/plan revision.
 Existing HTML stays readable. Do not mass-convert historical Markdown or delete it; new
 and explicitly revised documents use JSON. Schema migrations are explicit, never lossy.
+Document schema stays at version 1. Execution records now use version 2; preserve old
+three-gate/per-task-review records and follow the [execution migration](execution.md).

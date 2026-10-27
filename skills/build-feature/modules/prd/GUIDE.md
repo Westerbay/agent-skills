@@ -14,7 +14,9 @@ Ask one to three questions only when a material decision remains unresolved.
 Use the compact contract in [references/authoring.md](references/authoring.md). Read only
 the relevant profile and example; do not load the renderer or full schema in context.
 `product` PRDs cover outcomes, users, requirements and macro tasks. `implementation`
-PRDs operationalize an approved technical plan without copying its narrative.
+PRDs hold tasks/checks alongside a technical plan without copying its narrative. For
+build-feature, prepare both sources before the combined Gate B approval: one rendered
+implementation plan presents technical logic/UML first, then requirements and the task DAG.
 
 ## Commands
 
@@ -43,18 +45,19 @@ requires only Node; never present source-only diagrams as completed images.
 
 ```bash
 node <prd-skill>/scripts/prd.mjs validate <feature>.prd.json --plan <feature>.tech-plan.json
-node <prd-skill>/scripts/prd.mjs render <feature>.tech-plan.json
 node <prd-skill>/scripts/prd.mjs render <feature>.prd.json --plan <feature>.tech-plan.json
 node <prd-skill>/scripts/prd.mjs task-context <feature>.prd.json CODE-001 --plan <feature>.tech-plan.json
 ```
 
 Omit `--plan` for a standalone product PRD. Use `--out` to place HTML or context elsewhere;
-use `--plan-html` when the linked technical HTML is not beside its JSON. Re-render after
+`render` with `--plan` embeds technical entries and compiles their diagrams in the same
+HTML; a separate technical-plan render is optional for standalone use. Re-render after
 source changes. Validate before rendering and fix errors; coverage gaps are warnings
-while drafting and blockers at implementation approval.
+while drafting and blockers at combined Gate B approval. No separate Gate C is needed.
 
 The HTML is portable, offline, printable, searchable and keyboard accessible. Importing
-JSON is a preview, not a filesystem save or approval. Imported Mermaid remains visible
+JSON is a preview, not a filesystem save or approval. Import drops any previous embedded
+technical plan, diagrams and execution evidence to prevent stale combinations. Imported Mermaid remains visible
 as source until compiled with `render`. Design skills are needed to change the shared
 template, not to produce each PRD. Examples live in `examples/`.
 

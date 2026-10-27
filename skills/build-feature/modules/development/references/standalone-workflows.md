@@ -7,8 +7,17 @@ skills or remote services. Compatible installed skills can add depth when useful
 
 Use for meaningful business rules, regressions, transformations, and integration seams.
 
+Apply the test-value gate before starting a red/green cycle. Reuse an existing test when
+it already protects the changed behavior; do not create one test per method, new file,
+getter, setter, or refactoring step. A behavior-preserving refactor normally starts from
+existing green tests. Trivial, reversible changes can use relevant existing checks
+without adding a test. Getters or setters with validation or state invariants still
+have meaningful behavior.
+
 1. Choose one observable behavior and a plausible defect the test must catch. Exercise
-   the public seam used by the caller; avoid coupling assertions to private helpers.
+   the public seam used by the caller at the lowest reliable test layer; avoid coupling
+   assertions to private helpers. Use a real integration boundary when a unit test
+   cannot catch the defect, and reserve E2E for critical assembled journeys.
 2. Write the smallest test using the repository's existing runner, fixtures, and style.
    Run it before implementation. Confirm it fails for the missing behavior, not a broken
    environment or unrelated error. For an existing fix, reproduce the failure first
@@ -22,6 +31,38 @@ Prefer real domain logic and realistic data. Test retries, failures, permissions
 concurrency when the changed contract makes them relevant. A test that only mirrors
 implementation details or checks trivial wiring does not earn its maintenance cost.
 If execution is blocked, report the blocker; never claim a red/green cycle occurred.
+
+### Portfolio and test cleanup
+
+For a suite assessment or substantial test changes, prefer **80% unit / 15% integration /
+5% end-to-end** as an advisory target. This is a distribution of tests, not a code-coverage
+percentage. It does not require a repository-wide census for each small code change.
+Classify by what actually executes: a unit protects a narrow behavior with controlled
+external systems; integration exercises a real collaboration boundary; E2E exercises a
+journey through the assembled application. Folder names and browser tools do not decide
+the category. Count executable cases consistently, excluding retries and environment-matrix
+repetitions; disclose parameterized-case counting, unknown cases, and skipped cases.
+
+When a reliable inventory is available, report counts, scope, and proportions over the
+classified cases. For a nonempty portfolio that differs from 80/15/5, flag the deviation,
+explain context, and inspect possible redundant or trivial tests. An unknown or empty
+inventory has no meaningful percentages; do not fabricate them. Small or boundary-heavy
+projects may justify another balance. Preserve a documented project strategy and explain
+the tradeoff rather than changing it silently.
+
+Before deleting or moving a test, identify the protected behavior and the remaining test
+that catches the same plausible defect, or establish that it checks no meaningful behavior.
+Preserve real serialization, transaction, adapter, permission, and critical journey coverage.
+Add meaningful replacement protection first when needed, then run the affected suites.
+Make cleanup only within the authorized scope. Removing trivial unit tests can worsen the
+ratio while improving the suite; never compensate with filler or delete a useful E2E test
+just to meet the target. Report duration or flakiness only when measured.
+
+This applies the maintainability and public-behavior guidance in
+[Software Engineering at Google, chapter 12](https://abseil.io/resources/swe-book/html/ch12.html)
+and the boundary tradeoffs in [The Practical Test Pyramid](https://martinfowler.com/articles/practical-test-pyramid.html).
+Google's book suggests roughly 80% unit and 20% broader tests; the 15/5 split is this
+workflow's preference, not a universal result established by that source.
 
 ## UI and interaction
 
@@ -41,15 +82,12 @@ Use for material UI or UX changes; follow frontend.md for framework-specific gui
 
 ## Module and architecture decisions
 
-Use for explicit architecture work or a concrete cross-module design problem.
+Use for explicit architecture work or a concrete cross-module design problem. Apply
+[modular-design.md](modular-design.md) during ordinary implementation when choosing new
+responsibilities, extension boundaries, and dependencies; do not wait for an architecture
+review to establish those decisions.
 
-- Trace the invariant, its owner, consumers, and dependency direction before proposing
-  a boundary. Read relevant architecture decisions and preserve public contracts.
-- Prefer a module that owns a coherent rule and hides meaningful complexity. Avoid
-  layers that merely forward calls or abstractions with no current consumer.
 - Compare the smallest local change with one justified alternative. Explain concrete
   costs, migration implications, and how the behavior will be verified.
-- Keep domain decisions independent of infrastructure providers when the repository
-  already supports that separation. Introduce new seams only for demonstrated needs.
 - Confirm material contract or architecture changes when outside the authorized scope.
   Implement incrementally and verify existing callers along with the new path.

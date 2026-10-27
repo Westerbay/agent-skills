@@ -1,77 +1,112 @@
 # Implementation orchestration
 
-## Preconditions and checkpoints
+## Baselines and ownership
 
-Confirm Gate C and unchanged PRD/plan fingerprints. Inspect the repository and preserve
-unrelated work. Read [delivery modes](delivery.md) and keep the Gate A choice explicit.
-Do not stage, commit, push, or create external review requests without recorded authority.
+Confirm Gate A/B and unchanged plan/implementation fingerprints. Preserve unrelated work
+and keep [delivery mode](delivery.md) and Git authority explicit. Capture a cumulative
+feature baseline and each task's attributable before/after patch or snapshot in local
+scratch, including added/deleted/binary files. Keep planning files outside code diffs.
 
-Before each task, capture its baseline and owned files in a unique local scratch directory.
-Keep scratch and planning documents outside the code diff. For local delivery, retain
-before/after copies or patches, including new and deleted files. Record pre-existing edits
-separately; never count them as the task's work. Expand the baseline before editing a newly
-identified shared file. These snapshots allow review without staging or checkpoint commits.
-In review-request mode, record the exact branch/base and the authorized dependency strategy:
-merged predecessor or explicit stacked base. Never infer a default branch name.
+Record pre-existing user edits separately. Before first touching a newly identified file,
+extend the baseline from its unmodified state. Do not stage, commit or switch branches
+just to capture a patch. Use isolated worktrees only when supported and authorized.
+Never have concurrent agents switch the branch of a shared checkout.
 
-## Classify and select
+## Dispatch a safe parallel batch
 
-Every task is either `code` (changes repository content, including seeds, docs, tests and
-migrations) or `human-qa` (a person exercises and judges existing behavior).
-Human acceptance is never implemented, simplified, reviewed as code, or given its own PR/MR.
+Use `prd.mjs next` with both source documents and the run record. It returns dependency-
+ready `taskIds`, a conservative disjoint `parallelTaskIds` batch, active work and scope
+conflicts. The command records no claim and launches no agent. Recheck scope/dependencies
+when starting each task; `record-task --phase started` claims its declared write scope.
+The state writer serializes claims, not implementation work.
 
-Use `<skill-dir>/modules/prd/scripts/prd.mjs next` with PRD, plan and run record to select
-one ready task. Use `task-context` to produce its exact constraints and transitive references.
-Complete the whole pipeline before starting another code task, even when several are ready.
+A task cannot start before its CODE prerequisites are `validated`. Select up to the
+available worker count from the safe batch; do not wait for unrelated active tasks to
+finish. Inspect actual shared resources as well as path overlap: schema contracts,
+generated outputs, test databases and shared build steps may need coordination.
+Unknown/glob scopes serialize conservatively; use concrete files/subtrees for parallelism.
 
-## Implementation role
+Give each implementation worker:
 
-Give one implementation agent, when available and permitted:
+- `task-context`, task ID, behavior and acceptance IDs;
+- exact owned paths, excluded/shared surfaces and validated prerequisite outputs;
+- the absolute bundled development guide path and relevant references;
+- meaningful validation and any safe fixture responsibilities;
+- no unrelated cleanup, Git publication or edits outside ownership;
+- a return contract: patch/checkpoint, changed files, checks and unresolved risks.
 
-- task/context paths, task ID, goal and acceptance IDs;
-- exact owned files, shared surfaces, excluded scope and completed dependencies;
-- the absolute path to `modules/development/GUIDE.md` and relevant references;
-- seed/fixture responsibility and meaningful validation commands;
-- a prohibition on unrelated cleanup, commits, pushes or external writes;
-- a return contract: changed files, behavior, actual checks and unresolved risks.
+The coordinator owns integration and shared-surface scheduling. Workers follow
+[development guidance](../modules/development/GUIDE.md), record `implemented`, run targeted
+checks, then record `validated`. A failed local check is fixed before validation.
+There is no per-task specialist review, simplifier ceremony or PR publication here.
+Validated dependencies release implementation work, not delivery.
 
-Without subagents, follow the same contract in the current agent. Never fabricate delegation.
-Only one writer owns a shared surface at a time. The coordinator owns integration unless
-that ownership was explicitly assigned.
+With unavailable subagents, use the same graph and contracts sequentially; disclose
+that no independent implementation/review agents ran. `human-qa` tasks are never coding
+assignments; CODE tasks must not depend on post-delivery human acceptance.
 
-## Per-task pipeline
+## Integrate, simplify and review once
 
-1. Implement the selected behavior and inspect the actual diff for scope drift.
-2. Run its narrow meaningful validation; record `implemented`, then `validated` with evidence.
-3. Apply [simplifier](simplifier.md) in a separate pass or available agent. Record
-   `simplified`; a justified no-change pass is valid.
-4. Repeat the affected validation and record `revalidated`.
-5. Follow [review](../modules/review/GUIDE.md), light by default. This pass is read-only.
-6. Record `reviewed` and triage concrete findings against the approved contract. Fix
-   accepted findings in a distinct implementation pass or agent, then rerun the pipeline.
-   Review may go from `reviewed` to `implemented` once; at most two review passes.
-   Unresolved warnings/criticals or incomplete review coverage block dependent tasks.
-7. Record actual check results using `record-check`. When the task is reviewable and its
-   checks pass or a stated limitation is accepted, record `ready-to-open` (the historical
-   phase name also means ready for local delivery).
-8. Local mode: save the exact checkpoint, evidence, and handoff; record `delivered-local`.
-   Review-request mode: create an authorized draft PR/MR using the chosen provider and
-   verify its result; record `published` with the actual URL. Without authority, stop
-   at `ready-to-open`. Do not mark an uncreated request published.
+After every CODE task is validated:
 
-Nits alone do not block unless they reveal a concrete repeated maintainability risk.
-The execution tool records observations; it cannot determine whether claims are true.
-Never use its successful exit as a substitute for implementation, review or consent.
+1. Combine their exact outputs, resolve integration issues within approved behavior,
+   and record feature phase `integrated` using `record-feature`.
+2. Run the relevant combined behavior, type/build, integration and risk checks. Record
+   actual check results and feature phase `validated`; report blocked checks honestly.
+3. Apply the [simplifier](simplifier.md) once to the combined feature. Give each justified
+   refactor an owning task and preserve attributable delivery patches. Record `simplified`.
+4. Re-run affected checks, save an immutable cumulative result and record `revalidated`.
+5. Follow [review](../modules/review/GUIDE.md), selecting light/full coverage and relevant
+   [specialists](../modules/review/references/specialist-reviews.md) for the full feature.
+   All reviewers use the same baseline/result and are read-only. Pause implementation
+   writers during capture, review and verification.
+6. Aggregate once and record feature phase `reviewed` once, not once per specialist or
+   task. Triage supported findings against the approved contract.
 
-## Integrated verification
+Use the feature's starting baseline, not the latest task patch. Keep snapshots immutable
+and label each result uniquely with fresh content hashes/patch digest. The review helper
+does not automatically bind a reply to the patch digest; the coordinator must verify
+matching run labels and snapshot identity and reject stale replies.
 
-After all code deliveries, inspect cross-task contracts and replay the impact map and
-acceptance matrix. Run proportionate integrated checks and safe seeds where available.
-Use full review only for remaining cross-task risk. A necessary integration fix is a
-scoped code task and requires the affected specification approvals to be updated before
-implementation; do not silently edit an approved task graph.
+## Correct accepted findings
 
-Record observed evidence in the run JSON and re-render HTML. Present behavior, local
-checkpoints or PR/MR links, actual checks, residual risks, and separate human-QA steps.
-Only an actual human acceptance message permits an `accepted` record. Do not manufacture
-acceptance or keep polling a person; hand off reproducible steps.
+Verify cited code and impact, deduplicate root causes, and assign each accepted finding
+an owner, focused repair and behavioral check. Supported maintainability problems deserve
+actual refactors, not just recommendations. Metrics or the test ratio alone do not justify
+rewrites or deleting useful coverage.
+
+Assign separate writers the accepted fixes and bounded ownership. Quality/SOLID/web skills
+can run in explicit review-and-refactor mode here; security review stays read-only with
+remediation by an authorized implementation writer. Shared-file changes have one owner.
+Ordinary internal refactors in the approved scope need no new permission. Material changes
+to architecture, public/persisted contracts, auth, scope or other approved behavior return
+to the affected gate.
+
+Update the owning task patches after cross-task repairs; do not leave all corrections in
+a large catch-all PR. Check each task against its intended base so redistribution does
+not introduce missing imports, broken intermediate states or duplicated dependency diffs.
+Re-run affected task and combined checks. Record `corrected -> revalidated`, save a new
+snapshot, and review the entire corrected feature against the original feature baseline.
+
+At most two feature review rounds. The second verifies prior fixes and their consequences.
+Do not restart a per-task loop, reset the count with a new run, or make unreviewed edits
+after the final pass. Unresolved material findings/incomplete coverage stay blocked at
+`reviewed`; report the specific decision needed. A malformed reply may use the review
+module's one retry on the unchanged snapshot, without a new implementation round.
+
+## Deliver and hand off
+
+When concerns are resolved or an explicit limitation accepted, compare the actual result
+with the final reviewed snapshot and record feature phase `ready-to-deliver`. That phase
+unlocks per-task `ready-to-open -> delivered-local | published`; dependencies determine
+delivery order, while independent tasks may be prepared independently.
+
+Follow [delivery guidance](delivery.md) for one small checkpoint/PR/MR per CODE task.
+Splitting or rebasing changes can invalidate review evidence: verify exact content against
+the reviewed snapshot and run checks on each actual base/head composition. A substantive
+new change needs renewed affected review, not a claim that the old review covered it.
+Do not exceed the two-round limit; disclose the blocker if new corrections are needed.
+
+Record actual results, re-render the combined HTML, and hand off task checkpoints/links,
+checks, risks and reproducible human-QA steps. Only actual human acceptance permits
+`accepted`. Do not poll or manufacture a person's acceptance.
