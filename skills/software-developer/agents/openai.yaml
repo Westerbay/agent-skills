@@ -1,4 +1,4 @@
 interface:
   display_name: "Software Developer"
-  short_description: "Clear code, focused responsibilities and safe types"
-  default_prompt: "Use $software-developer to implement or refactor this feature with focused responsibilities, named handlers and explicit configuration."
+  short_description: "Build clear, modular code with behavioral validation"
+  default_prompt: "Use $software-developer to implement and refactor this change with clear names, cohesive SOLID boundaries, meaningful behavioral tests, and semantic web output where relevant."

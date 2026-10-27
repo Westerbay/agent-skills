@@ -1,7 +1,7 @@
 # Frontend development
 
 Read this reference when changing React, UI structure, forms, client state,
-localization, accessibility, or interaction behavior.
+localization, accessibility, interaction behavior, or web page delivery and metadata.
 
 ## React and component boundaries
 
@@ -21,6 +21,16 @@ localization, accessibility, or interaction behavior.
   then pass the named value to the form API.
 - Keep views focused on composition. Move reusable behavior into the repository's
   established feature, hook, or library location.
+- Extract a component for shared semantic interaction and presentation, a hook or
+  equivalent for shared stateful behavior, and a domain function for a shared pure rule.
+  Similar markup alone does not justify merging unrelated business policies. Keep a
+  feature-owned abstraction local until actual consumers justify wider ownership.
+- Give coordinated state an explicit common owner; sharing a hook shares logic, not
+  one state instance. Preserve controlled/uncontrolled contracts, instance isolation,
+  identity, cancellation, and cleanup when extracting behavior.
+- Use named variants for one cohesive axis and composition for independent concerns.
+  Avoid accumulating unrelated boolean props or building a generic schema interpreter
+  to accommodate consumers with different responsibilities.
 - When no stronger local convention exists, keep one primary exported React component
   per TSX file and extract independently reusable components.
 - Keep route files focused on the routing contract, page metadata, data loading, and
@@ -34,6 +44,23 @@ localization, accessibility, or interaction behavior.
 - Do not split code into hooks or components that merely forward arguments without
   concentrating useful behavior.
 
+## Semantic HTML and interaction contracts
+
+- Choose native elements by purpose: links with real destinations for navigation,
+  buttons with intentional types for actions, labeled controls for input, and lists or
+  tables for actual collection relationships. Check the DOM emitted by shared components.
+- Express page structure through meaningful landmarks and heading ranks. Keep neutral
+  wrappers as `div`/`span` when appropriate; replacing every wrapper with `section`
+  creates false structure. Assess headings in the composed page, not just one component.
+- Prefer native behavior and established accessible primitives. ARIA does not implement
+  keyboard interaction. For custom widgets, implement the relevant keyboard, focus, and
+  state contract, including focus restoration and background interaction for overlays.
+- Associate form labels and errors with stable, instance-specific field IDs; a
+  placeholder is not a label. Preserve validation feedback and recovery after failure.
+- When replacing markup, preserve form submission, disabled behavior, event propagation,
+  accessible names, link destinations, and intended analytics. Exercise the interaction
+  with keyboard and pointer; an automated accessibility scan alone is insufficient.
+
 ## Clarity and user behavior
 
 - Name non-obvious conditions and constants. Replace nested or long ternaries with clear
@@ -46,9 +73,6 @@ localization, accessibility, or interaction behavior.
   catalog and localization runtime before screens accumulate copy, even when the first
   release has one locale. Use the localization library's plural, select, number, and date
   rules instead of assembling grammatical variants in components.
-- Give routed pages intentional titles and descriptions. Check canonical URLs, social
-  metadata, indexing rules, and structured data when the page is public and discovery
-  matters; keep private and authentication screens out of search indexes when suitable.
 - Use the repository's toast system for brief action outcomes that do not need to remain
   beside a field or control. Keep validation and recoverable contextual errors inline,
   and avoid showing the same failure both inline and as a toast.
@@ -68,6 +92,21 @@ localization, accessibility, or interaction behavior.
   recoverable and show the actionable cause.
 - Check whether typing, focus changes, or renders trigger avoidable navigation, network
   calls, or state synchronization.
+
+## Web delivery and discoverability
+
+- Establish whether a route is public and intended for discovery or private/intentionally
+  excluded. Preserve authentication and intentional `noindex`; robots directives are not
+  access control, and `robots.txt` blocking does not guarantee exclusion from search.
+- Give routed pages intentional titles and descriptions. For public discovery surfaces,
+  keep canonical URLs, internal links, redirects, sitemap entries, and locale identity
+  coherent. Do not canonicalize distinct content to one page merely to remove duplicates.
+  Add social metadata and supported structured data when relevant; values must describe
+  the actual visible content, not invented ratings or offers.
+- When changing delivery, inspect direct-load status/headers and initial HTML as well as
+  the hydrated document and client navigation. Check real error responses, crawlable
+  links, and route-specific metadata; a shared generator must not leak another route's
+  title or canonical. Use the project's rendering model without imposing an SSR rewrite.
 
 For material visual design, interaction design, responsive behavior, or UX polish,
 follow the UI workflow in [standalone-workflows.md](standalone-workflows.md).
