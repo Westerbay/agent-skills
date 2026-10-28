@@ -1,7 +1,8 @@
 # Review dimensions
 
-Each reviewer reads the saved scope, the output contract, these shared rules, and only
-its assigned dimension. Sequential single-agent passes use the same methodology.
+Each reviewer reads the saved scope, output contract, shared rules and assigned concerns.
+General covers quality, conventions, regression and logic; selected specialists cover
+architecture, web or security. Sequential passes use the same methodology.
 The coordinator supplies exact paths; reviewers do not recollect a different Git diff.
 When invoked by `build-feature`, assess the cumulative change after all CODE tasks validate,
 including interactions across task boundaries. Keep the tasks' ownership map for routing
@@ -36,8 +37,7 @@ concern applies to only some files.
 
 ## Quality
 
-- Apply an available `code-quality-review` to changed logic, production code, and tests;
-  use `web-review` when actual rendered output, interactions, routes, or delivery changes.
+- Apply an available `code-quality-review` to changed logic, production code, and tests.
   Follow the routing adapter for discovery and bundled fallback.
 - For duplication, naming, dense control flow or mixed orchestration, apply the
   [maintainability guide](../../development/references/maintainability.md) as review
@@ -58,12 +58,9 @@ concern applies to only some files.
   cause/status, bounded queries/provider concurrency, cache reuse and N+1 risks.
 - On frontend changes, check state ownership, effect dependencies/cleanup where used,
   form validation, loading/error recovery, semantic controls, keyboard and focus behavior.
-- For changed web delivery, trace direct-load status/headers, rendered HTML, crawlable
-  links, and route metadata. Preserve public/private indexing intent. Detect repeated
-  components or behavior by shared meaning and actual consumers, not similar markup alone.
 - Assess changed tests by protected behavior and boundary. When reviewing the portfolio,
   apply the bundled [test-value guidance](../../development/references/standalone-workflows.md#portfolio-and-test-cleanup);
-  report 80/15/5 deviations as advisory notes, never deletion quotas or warnings by themselves.
+  treat 80/15/5 as a portfolio preference, not an exact-match alert or deletion quota.
 - Apply [library practices](library-practices.md) only for libraries actually present and
   the installed version. Repository contracts win over generic style preferences.
 
@@ -103,7 +100,21 @@ concern applies to only some files.
 - Use inspected design requirements for functional UI coverage; unavailable visuals remain
   unverified. Template decoration is not automatically a functional requirement.
 
-## Architecture (full)
+## Web (when selected)
+
+- Apply `web-review` or the bundled frontend guidance to the actual affected routes and
+  consumers. Compare rendered behavior and relevant viewports with approved UX/UI
+  decisions; missing or inaccessible designs remain a coverage limitation.
+- Check emitted semantic HTML, keyboard/focus behavior, state ownership and recovery.
+  Distinguish stable visual-contract protection from tests of incidental CSS classes.
+- For delivery changes, inspect direct-load status/headers, initial HTML, crawlable links
+  and route metadata. Preserve public/private indexing intent.
+- Identify reuse by shared meaning and real consumers. Short inline callbacks, objects
+  or JSX are not defects by themselves; extract when ownership or readability improves.
+- Name callbacks for clarity when useful. Naming a function inside a React component
+  does not stabilize its identity; require memoization only at a demonstrated seam.
+
+## Architecture (when selected)
 
 - Apply an available `solid-architecture-review`, or the bundled
   [modular-design guide](../../development/references/modular-design.md), to a supported
@@ -116,7 +127,7 @@ concern applies to only some files.
 - Inspect migration/rollout compatibility and integration across tasks, including cache,
   provider and background paths. State where evidence cannot establish runtime safety.
 
-## Security (full)
+## Security (when selected)
 
 - Apply [security-audit integration](security-audit-integration.md) and the selected
   installed companion guidance. Preserve its execution controls and certainty states;

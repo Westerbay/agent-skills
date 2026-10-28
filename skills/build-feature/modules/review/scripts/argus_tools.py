@@ -2,7 +2,6 @@
 """Local deterministic Argus preparation, aggregation and anchor classification. No posting."""
 import argparse
 import ast
-from collections import Counter
 import fnmatch
 import hashlib
 import json
@@ -11,7 +10,12 @@ import re
 import subprocess
 import sys
 
-SECTIONS = ['quality', 'conventions', 'regression', 'logic', 'architecture', 'security']
+REVIEWER_SECTIONS = {
+    'general': ['quality', 'conventions', 'regression', 'logic'],
+    'architecture': ['architecture'],
+    'web': ['web'],
+    'security': ['security'],
+}
 SEVERITIES = ['critical', 'warning', 'nit']
 IGNORE = ['*.lock', 'bun.lock', 'pnpm-lock.yaml', 'package-lock.json', 'yarn.lock', 'snapshot.json', '*.snap', '*.gen.ts']
 IGNORE_DIRS = {'paraglide', 'generated', 'dist', '.turbo', 'node_modules'}
@@ -20,7 +24,7 @@ IGNORE_DIRS = {'paraglide', 'generated', 'dist', '.turbo', 'node_modules'}
 def git(repo, *args):
     result = subprocess.run(['git', '-C', str(repo), '-c', 'core.quotepath=true', *args], capture_output=True)
     if result.returncode:
-        raise ValueError(result.stderr.decode().strip())
+        raise ValueError(result.stderr.decode('utf-8', errors='replace').strip())
     return result.stdout.decode('utf-8', errors='surrogateescape')
 
 
@@ -66,7 +70,27 @@ def patch_index(patch):
     return files, hunks
 
 
-def prepare(repo, base, branch, staged, full, out):
+def select_reviewers(reviewers=None, full=False):
+    if full and reviewers is not None:
+        raise ValueError('Use --reviewers or --full, not both')
+    selected = list(REVIEWER_SECTIONS) if full else ['general'] if reviewers is None else reviewers
+    if (not isinstance(selected, list) or not selected or
+            any(not isinstance(item, str) or item not in REVIEWER_SECTIONS for item in selected) or
+            len(set(selected)) != len(selected) or 'general' not in selected):
+        raise ValueError('Select general and any of architecture, web, security, without duplicates')
+    return selected
+
+
+def validate_manifest(manifest):
+    if not isinstance(manifest, dict) or manifest.get('schemaVersion') != 2:
+        raise ValueError('Review manifest v2 is required; prepare a fresh snapshot and v2 replies')
+    select_reviewers(manifest.get('reviewers', []))
+    if not isinstance(manifest.get('patchDigest'), str) or not re.fullmatch(r'[0-9a-f]{64}', manifest['patchDigest']):
+        raise ValueError('Manifest patchDigest must be the SHA-256 of the saved patch bytes')
+
+
+def prepare(repo, base, branch, staged, full, out, reviewers=None):
+    selected = select_reviewers(reviewers, full)
     repo = Path(git(repo, 'rev-parse', '--show-toplevel').strip())
     if branch.startswith('-') or base and base.startswith('-'):
         raise ValueError('Invalid ref')
@@ -104,27 +128,27 @@ def prepare(repo, base, branch, staged, full, out):
         except ValueError:
             if name in tree_files:
                 raise
-    manifest = {'schemaVersion': 1, 'repo': str(repo), 'mode': 'staged' if staged else 'branch',
+    manifest = {'schemaVersion': 2, 'repo': str(repo), 'mode': 'staged' if staged else 'branch',
                 'base': base or '', 'branch': branch, 'headSha': head, 'baseSha': base_sha,
                 'patchDigest': hashlib.sha256(patch.encode('utf-8', errors='surrogateescape')).hexdigest(),
                 'files': kept, 'excluded': [name for name in files if name not in kept],
-                'reviewers': SECTIONS if full else SECTIONS[:4], 'capabilities': capabilities,
+                'reviewers': selected, 'capabilities': capabilities,
                 'libraries': libs, 'manifestErrors': package_errors, 'lineCounts': counts,
                 'patchBytes': len(patch.encode('utf-8', errors='surrogateescape'))}
     out.mkdir(parents=True, exist_ok=False)
-    (out / 'manifest.json').write_text(json.dumps(manifest, indent=2) + '\n')
-    (out / 'diff.patch').write_text(patch, errors='surrogateescape')
-    (out / 'name-status.txt').write_text(git(repo, 'diff', '--name-status', *diff_args))
-    (out / 'numstat.txt').write_text(git(repo, 'diff', '--numstat', *diff_args))
+    (out / 'manifest.json').write_text(json.dumps(manifest, indent=2) + '\n', encoding='utf-8')
+    (out / 'diff.patch').write_text(patch, encoding='utf-8', errors='surrogateescape', newline='')
+    (out / 'name-status.txt').write_text(git(repo, 'diff', '--name-status', *diff_args), encoding='utf-8')
+    (out / 'numstat.txt').write_text(git(repo, 'diff', '--numstat', *diff_args), encoding='utf-8')
     return {'manifest': str((out / 'manifest.json').resolve()), 'patch': str((out / 'diff.patch').resolve()), 'files': len(kept), 'excluded': manifest['excluded']}
 
 
-def validate_reply(reply, section, manifest):
+def validate_reply(reply, reviewer, manifest):
     required = {'agent', 'version', 'scope', 'status', 'coverage', 'summary', 'findings', 'notes', 'errors'}
     if not isinstance(reply, dict) or not required <= reply.keys():
         raise ValueError('Missing required reply fields')
-    if reply['agent'] != f'{section}-reviewer' or not re.fullmatch(r'1\.\d+\.\d+', reply['version']):
-        raise ValueError('Wrong agent or contract major version')
+    if reply['agent'] != f'{reviewer}-reviewer' or not isinstance(reply['version'], str) or not re.fullmatch(r'2\.\d+\.\d+', reply['version']):
+        raise ValueError('Wrong reviewer or contract version; v2 replies with patchDigest are required')
     combinations = {'ok': 'complete', 'partial': 'partial', 'error': 'not-run'}
     if reply['status'] not in combinations or reply['coverage'] != combinations[reply['status']]:
         raise ValueError('Invalid status/coverage combination')
@@ -134,6 +158,8 @@ def validate_reply(reply, section, manifest):
     if bool(reply['errors']) != (reply['status'] != 'ok'):
         raise ValueError('Partial/error replies require errors; ok replies must have none')
     scope = reply['scope']
+    if not isinstance(scope, dict) or scope.get('patchDigest') != manifest['patchDigest']:
+        raise ValueError('Reply patchDigest differs from the prepared snapshot or is missing')
     if scope.get('mode') != manifest['mode'] or scope.get('base') != manifest['base'] or scope.get('branch') != manifest['branch']:
         raise ValueError('Reply scope differs from the prepared snapshot')
     if not isinstance(scope.get('files'), list) or not set(scope['files']) <= set(manifest['files']):
@@ -150,9 +176,9 @@ def validate_reply(reply, section, manifest):
         if item['id'] in ids:
             raise ValueError('Duplicate finding ID')
         ids.add(item['id'])
-        if item['section'] != section or item['severity'] not in SEVERITIES or item['confidence'] not in ['high', 'medium', 'low']:
+        if item['section'] not in REVIEWER_SECTIONS[reviewer] or item['severity'] not in SEVERITIES or item['confidence'] not in ['high', 'medium', 'low']:
             raise ValueError('Invalid finding classification')
-        if section == 'security' and item['severity'] == 'nit':
+        if item['section'] == 'security' and item['severity'] == 'nit':
             raise ValueError('Security finding cannot be a nit')
         if item['file'] not in manifest['files']:
             raise ValueError('Finding file is outside the assigned diff')
@@ -170,6 +196,7 @@ def validate_reply(reply, section, manifest):
 
 
 def aggregate(manifest, replies):
+    validate_manifest(manifest)
     findings, failures, reviews, seen = [], [], [], set()
     for section in manifest['reviewers']:
         try:
@@ -181,14 +208,14 @@ def aggregate(manifest, replies):
         if reply['status'] != 'ok':
             failures.append({'section': section, 'error': '; '.join(reply['errors'])})
         for item in reply['findings']:
-            key = (section, item['file'], item.get('line'), item['severity'], item['title'].strip().casefold())
+            key = (item['section'], item['file'], item.get('line'), item['severity'], item['title'].strip().casefold())
             if section == 'security' or key not in seen:
                 findings.append(item)
             seen.add(key)
     findings.sort(key=lambda item: (SEVERITIES.index(item['severity']), item['file'], item.get('line', 0)))
     counts = {key: sum(item['severity'] == key for item in findings) for key in SEVERITIES}
     verdict = 'blocking' if counts['critical'] else 'needs-attention' if counts['warning'] else 'incomplete' if failures else 'pass'
-    return {'schemaVersion': 1, 'patchDigest': manifest['patchDigest'], 'verdict': verdict,
+    return {'schemaVersion': 2, 'patchDigest': manifest['patchDigest'], 'verdict': verdict,
             'confidence': 'low' if len(failures) > 1 else 'medium' if failures else 'high',
             'counts': counts, 'findings': findings, 'reviewers': reviews, 'failures': failures}
 
@@ -226,7 +253,9 @@ def main():
     prep.add_argument('--base')
     prep.add_argument('--branch', default='HEAD')
     prep.add_argument('--staged', action='store_true')
-    prep.add_argument('--full', action='store_true')
+    selection = prep.add_mutually_exclusive_group()
+    selection.add_argument('--full', action='store_true', help='Explicitly select general and every specialist')
+    selection.add_argument('--reviewers', help='Comma-separated selection: general (required), architecture, web, security')
     prep.add_argument('--out', required=True, type=Path)
     agg = sub.add_parser('aggregate')
     agg.add_argument('--manifest', required=True, type=Path)
@@ -240,23 +269,25 @@ def main():
     anchor.add_argument('--out', required=True, type=Path)
     args = parser.parse_args()
     if args.command == 'prepare':
-        print(json.dumps(prepare(args.repo, args.base, args.branch, args.staged, args.full, args.out)))
+        reviewers = [name.strip() for name in args.reviewers.split(',')] if args.reviewers is not None else None
+        print(json.dumps(prepare(args.repo, args.base, args.branch, args.staged, args.full, args.out, reviewers)))
         return
-    manifest = json.loads(args.manifest.read_text())
+    manifest = json.loads(args.manifest.read_text(encoding='utf-8'))
+    validate_manifest(manifest)
     if args.command == 'aggregate':
         replies = {}
         for section in manifest['reviewers']:
             path = args.replies / f'{section}.json'
             if path.exists():
                 try:
-                    replies[section] = json.loads(path.read_text())
+                    replies[section] = json.loads(path.read_text(encoding='utf-8'))
                 except json.JSONDecodeError:
                     replies[section] = None
         result = aggregate(manifest, replies)
     else:
-        result = anchors(manifest, args.patch.read_text(errors='surrogateescape'), json.loads(args.report.read_text()), json.loads(args.existing.read_text()))
+        result = anchors(manifest, args.patch.read_bytes().decode('utf-8', errors='surrogateescape'), json.loads(args.report.read_text(encoding='utf-8')), json.loads(args.existing.read_text(encoding='utf-8')))
     args.out.parent.mkdir(parents=True, exist_ok=True)
-    args.out.write_text(json.dumps(result, indent=2) + '\n')
+    args.out.write_text(json.dumps(result, indent=2) + '\n', encoding='utf-8')
     print(args.out.resolve())
 
 

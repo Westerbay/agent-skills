@@ -1,128 +1,84 @@
 # Standalone specialists in the feature workflow
 
-Use relevant standalone review expertise within the existing feature phases. The skills
-remain independently usable; this adapter supplies feature scope, role authority, and the
-host review contract. It does not add approval gates, output dimensions, or review loops.
+Keep specialist skills independently usable. This adapter selects their expertise for
+one cumulative feature review; it adds no approval gate or per-CODE review loop.
 
-## Resolve capabilities once for the phase
+## Select expertise and resolve capabilities
 
-Discover `code-quality-review`, `solid-architecture-review`, `web-review`, and
-`security-audit` through the host's actual skill catalog. A coordinator may instead supply
-an explicit, verified repository source directory. Read the selected skill's actual
-`SKILL.md` and resolve its references relative to that directory. Do not assume sibling
-installations, hardcoded paths, matching versions, or automatic access to other skills.
-Do not install, update, copy, or connect anything merely to satisfy this adapter.
+Discover skills through the host catalog or a verified source directory. Read the actual
+selected entrypoints and resolve references from each directory. Do not assume sibling
+installations, automatic access, matching versions or permission to install a companion.
 
-Record which skills are available, selected, unnecessary for the scope, or unavailable
-in the existing review notes. Select by the behavior and boundaries affected:
-
-| Skill | Apply when | Existing review owner |
-| --- | --- | --- |
-| `code-quality-review` | Implemented code needs assessment of names, decisions, cohesion, constants, or test value | `quality`; its behavioral-test guidance may inform `regression` for actual coverage of changed contracts |
-| `solid-architecture-review` | Responsibilities, dependencies, supported extension points, or module boundaries change | `architecture` |
-| `web-review` | Changed rendering, interactions, metadata, route delivery, headers, or shared dependencies affect a web surface | `quality` |
-| `security-audit` | The request or changed trust boundary needs security review | `security`, through [security-audit integration](security-audit-integration.md) |
-
-Web impact includes server loaders, route handlers, and metadata builders; a filename
-extension alone neither requires nor excludes the web pass. Trace the shipped surface.
-Keep conventions and logic with their existing reviewers. Assign a duplicated concern
-to one owner: test maintainability belongs to quality, while a missing regression check
-for a changed contract belongs to regression. Share context without reporting it twice.
-
-Select **full host review** whenever architecture or security checks are needed, so the
-manifest includes those dimensions. Light covers quality, conventions, regression, and
-logic; full adds architecture and security. Full is still the host's six-dimension
-review, not permission for Cloudflare's complete audit workflow or a broader code scope.
-
-## Apply expertise at the right phase
-
-| Phase | Specialist use and authority |
+| Reviewer | Scope and optional skill |
 | --- | --- |
-| Before Gate B | Use relevant SOLID/architecture expertise to critique the proposed logic, contracts, ownership, and supported change scenario. Source stays read-only; concrete design risks enter the combined technical and execution plan before its single approval. |
-| CODE implementation | Apply quality and relevant SOLID/web guidance while implementing each owned task and its useful behavior checks. Do not dispatch a formal review or simplifier after each task. |
-| After all CODE tasks validate | Integrate the work, then run one simplifier over the cumulative feature. Give it exact edit ownership and explicit refactor authority. Recheck affected behaviors and cross-task seams before freezing the result. |
-| Final cumulative review | Run the selected specialists in one read-only checkpoint over that frozen feature result, including cross-task interactions. Return evidence without editing source. |
-| Corrections | Separate authorized writers apply accepted fixes/refactors to the owning tasks. Revalidate affected paths and the integrated result, then use the remaining review round on a fresh snapshot when needed. Deliver task patches/PRs only after this checkpoint completes. |
+| `general` (always) | Quality, conventions, regression and logic; use `code-quality-review` for maintainability and behavioral-test value. |
+| `architecture` | Changed responsibility, module dependency or consequential extension boundary; use `solid-architecture-review`. |
+| `web` | Changed rendered pages, interaction, semantic HTML, indexing or route delivery; use `web-review`. |
+| `security` | Requested review or changed trust boundaries, auth, permissions, isolation, secrets or execution; use `security-audit` through the [security adapter](security-audit-integration.md). |
 
-A pre-Gate B design critique consumes no formal review round and does not approve
-implementation. Gate A approves scope; Gate B approves the combined technical and
-execution plan. There is no separate Gate C or per-task review gate.
-Do not fabricate changed-file findings for code that exists only in a proposed design.
-During simplification, retain the [simplifier's boundaries](../../../references/simplifier.md):
-no new feature, changed public contract, redesigned approved architecture, or weakened
-behavioral protection. A useful improvement outside that scope becomes a concrete plan
-decision at the earliest affected gate, not an unapproved source edit.
+Choose specialists by actual impact, not filename or a fixed reviewer count. Web impact
+can come from server code; an unrelated TSX fixture need not trigger it. Architecture
+alone does not select security. State selected reviewers and triggering evidence in the
+existing review notes. The CLI defaults to `general`; `--reviewers general,architecture`
+is sufficient for architecture without web/security. `--full` is an explicit all-four
+shortcut, not permission for a full security audit.
 
-The security audit role always inspects target source read-only. Route any remediation
-to a separate authorized writer. Preserve the security adapter's operating-mode,
-sandbox, certainty, and evidence rules; do not treat ordinary test execution as a
-substitute for required sandboxed security validation.
+General retains correctness coverage when specialists run. Give overlapping concerns one
+reporting owner: test maintainability to quality, missing behavioral protection to
+regression, UI-specific behavior to web. Consolidate the same root cause across replies.
 
-## One cumulative checkpoint, one snapshot, existing owners
+## Use the existing phases
 
-Use the same saved feature baseline/integrated result, file list, hashes, patch digest,
-and approved feature/task
-context for every selected specialist in a review round. Reuse the reviewer already
-owning the dimension: the quality reviewer can apply both code-quality and web expertise
-without spawning a second competing review. Queue work when concurrency is limited;
-sequential passes use the same snapshot and disclose their lack of independence.
-An expertise lens may apply to only some files, but its owning reviewer still covers
-the whole assigned manifest scope. In particular, the quality reply must not reduce
-`scope.files` to web files and silently omit the other quality checks.
+- **Before Gate B:** focused read-only design critique when useful. Resolve concrete
+  weaknesses in logic, ownership and supported change scenarios before approval.
+- **During CODE:** apply relevant development guidance and targeted checks. No formal
+  specialist review or separate simplifier per task.
+- **After integration:** inspect cross-task duplication and boundaries. Apply only useful
+  authorized refactors; no-change is valid and unchanged checks need not be repeated.
+- **Final review:** selected reviewers assess one frozen cumulative result read-only.
+- **Corrections:** authorized writers repair accepted findings within their owned files,
+  validate affected behavior, and present a fresh snapshot for the remaining round.
 
-The dispatch must include:
+Reviewers never inherit write permission from a specialist's default review-and-refactor
+prompt. Simplifier/correction writers preserve approved behavior and design; material
+scope changes return to the affected gate. Security audit roles always inspect source
+read-only and route remediation to implementation owners.
 
-- the absolute paths to the saved scope, manifest, assigned dimension, and
-  [output contract](contract.md), plus repository instructions and task constraints;
-- the resolved specialist paths, relevant guidance, and why each applies;
-- an explicit instruction: **review this saved cumulative feature snapshot read-only; do not modify
-  source or recollect a different current Git diff; return the host dimension JSON**;
-- permitted validation and the exact missing capabilities, including security controls
-  where applicable.
+## Dispatch one contract per reviewer
 
-This explicit checkpoint instruction overrides a specialist's default UI prompt that
-offers review and refactoring. General implementation authority does not make the
-reviewer a writer. Supporting source outside the patch may be inspected to establish
-consumers and invariants, but tie it to the reviewed revision/checkpoint rather than
-mixing changing source into the evidence. Source changes invalidate the saved result;
-finish fixes before capturing the next review snapshot.
+Pass absolute paths to the saved patch/checkpoint, v2 manifest, [reply contract](contract.md),
+assigned concerns, applicable repository instructions, and approved scope/UML/design
+references. Include selected skill paths and available validation capabilities. Explicitly
+state: read-only, use this snapshot, return the assigned reviewer's JSON with the exact
+`scope.patchDigest`; do not recollect a changing Git diff.
 
-Keep the six section names and [JSON schema](contract.md) unchanged. Translate specialist
-observations into the owning dimension's evidence, severity, recommendations, and
-coverage. Preserve uncertainty; an unverified hypothesis is not a ranked defect.
-Consolidate the same root cause across specialists before aggregation, preserving the
-original evidence and owner. Do not rely on exact-text deduplication to catch semantic
-duplicates, or issue one output file per skill instead of one per assigned dimension.
+Use one agent for general's four topics. Selected specialists may run in parallel; queue
+when capacity is limited. Without delegation, use distinct sequential passes and report
+that they are not independent. All reviewers see the same cumulative scope and snapshot;
+supporting consumers must come from that revision. Save one reply per reviewer, not one
+per skill or general topic.
 
-## Missing expertise and failed checks
+A selected reviewer assesses its concern across the complete manifest. Do not omit files
+silently. The helper rejects a stale/missing digest, but cannot prove a reviewer read
+source or that a finding is correct; the coordinator still verifies cited evidence.
 
-When a skill is unavailable, disclose that it was not run and use the relevant bundled
-criteria without pretending to have applied that standalone skill:
+## Missing expertise and bounded corrections
 
-- quality: [maintainability](../../development/references/maintainability.md) and the
-  [behavioral test workflow](../../development/references/standalone-workflows.md);
-- architecture: [modular design](../../development/references/modular-design.md);
-- web: [frontend](../../development/references/frontend.md);
-- security: the source-based checks and explicit limits in the existing security adapter.
+If an optional companion is unavailable, disclose that and use bundled criteria:
+[maintainability](../../development/references/maintainability.md) and
+[tests](../../development/references/standalone-workflows.md) for general,
+[modular design](../../development/references/modular-design.md) for architecture,
+[frontend](../../development/references/frontend.md) for web, and the security adapter
+for source-based security checks. Never claim an absent skill ran.
 
-Unavailability alone need not block a feature whose required checks the bundled workflow
-can actually complete. An explicitly requested specialist/audit requirement remains unmet
-and must be reported. If a selected available skill fails to run or a decisive check is
-blocked, preserve partial/error coverage and its exact cause; do not silently downgrade
-to a fallback and label that specialist review complete. Follow the host's existing
-single retry for failed replies. Incomplete coverage blocks the checkpoint until resolved
-or explicitly accepted with its stated limitation.
+Missing optional expertise alone need not block work the bundled criteria can cover.
+An explicitly requested audit remains unmet if unavailable. Preserve a selected reviewer's
+failed/partial checks; do not disguise failure as a successful fallback. Retry malformed
+replies once on the unchanged snapshot. Unresolved decisive gaps block delivery unless
+explicitly accepted with the stated limitation.
 
-## Fix findings within the existing loop
-
-Accept maintainability findings with a concrete rule, consumer, or change hazard and
-a proportionate remedy. The authorized writer applies the focused root-cause refactor;
-neither a complexity score nor the 80/15/5 preference justifies deleting useful coverage.
-Follow the [implementation pipeline](../../../references/implementation-orchestration.md)
-for remediation, affected checks, fresh snapshots, and the review limit: all selected
-specialists belong to one host review round, with **two feature review rounds total**,
-not two per task or skill. Map each accepted fix to its owning task and eventual
-patch/PR; coordinate shared-file edits through one writer. Switching specialists,
-renaming a task, or delivering tasks separately does not reset the count. Unresolved material
-findings or incomplete coverage keep their existing blocking effect; scope changes
-return to the relevant gate. This adapter grants no additional write authority.
+All selected reviewers count as one integrated round. Two rounds run autonomously by
+default; further focused work needs actual user authorization via `authorize-review`,
+granting one extra round while retaining evidence and history. Never reset the run or
+change reviewer names to evade the limit. Map repairs to the owning CODE patches/PRs;
+metrics or a test ratio alone do not justify rewrites or deletion of useful tests.

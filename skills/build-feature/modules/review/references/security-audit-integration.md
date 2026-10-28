@@ -35,6 +35,24 @@ state that companion-specific audit coverage was not performed. If a full audit 
 requested, make that unmet requirement explicit; do not silently label the fallback a
 completed audit. This adapter and its source link keep the host workflow portable.
 
+## Check capabilities before audit orchestration
+
+Before launching reconnaissance or target execution, state the available level:
+
+- **Source review:** readable scope and required source context are available. This can
+  proceed read-only while missing runtime evidence remains explicit.
+- **Isolated validation:** verify every OS sandbox control below and the installed
+  runtime/toolchain before claiming executable checks are possible.
+- **Full audit:** additionally verify authorized scope, independent agents, artifact
+  handling, validators and budget meet the companion's complete workflow requirements.
+
+Check the installed companion's platform notes. The vendored Cloudflare CLI validators
+require POSIX protections unavailable in native Windows Node; a supported isolated
+environment must actually provide them. A container or WSL label alone does not prove
+the required sandbox controls. Report an exact capability blocker before spending the
+audit's reconnaissance budget; do not modify upstream rules or claim complete coverage
+from a source-only fallback.
+
 ## Carry safety into the review
 
 Source inspection stays read-only. Before executing target-controlled tests, builds,
