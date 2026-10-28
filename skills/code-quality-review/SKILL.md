@@ -48,9 +48,10 @@ length, duplication, or a metric alone does not establish a defect.
 For changed tests, production behavior requiring test protection, or a requested test
 portfolio review, also read [references/test-value.md](references/test-value.md). Inspect
 the actual behavior and dependencies of tests. Use **80% unit / 15% integration / 5% E2E**
-as this skill's preferred portfolio target, report deviations and candidate cleanup,
-and preserve unique behavioral coverage. The target is a preference, not a coverage
-percentage, industry law, or deletion quota.
+as this skill's preferred portfolio target when a suite assessment is relevant. Report
+actionable imbalance and cleanup supported by missing coverage, duplication or cost, not
+every numerical deviation. Preserve unique behavioral coverage; the target is neither a
+coverage percentage nor a deletion quota.
 
 Prioritize:
 

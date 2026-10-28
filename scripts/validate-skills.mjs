@@ -38,9 +38,27 @@ for (const entry of await readdir(path.join(root, 'skills'), { withFileTypes: tr
   await checkLinks(directory);
 }
 
+// The portable feature pack must ship the same maintained development guidance.
+const development = path.join(root, 'skills/software-developer');
+const bundled = path.join(root, 'skills/build-feature/modules/development');
+const normalize = text => text.replaceAll('\r\n', '\n').trim();
+const main = await readFile(path.join(development, 'SKILL.md'), 'utf8');
+const body = main.replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n/, '');
+if (normalize(body) !== normalize(await readFile(path.join(bundled, 'GUIDE.md'), 'utf8'))) {
+  errors.push('build-feature: development guide differs from software-developer');
+}
+const originalFiles = (await readdir(path.join(development, 'references'))).sort();
+const bundledFiles = (await readdir(path.join(bundled, 'references'))).sort();
+if (JSON.stringify(originalFiles) !== JSON.stringify(bundledFiles)) errors.push('build-feature: development reference file sets differ');
+for (const name of originalFiles.filter(name => bundledFiles.includes(name))) {
+  const original = await readFile(path.join(development, 'references', name), 'utf8');
+  const mirror = await readFile(path.join(bundled, 'references', name), 'utf8');
+  if (normalize(original) !== normalize(mirror)) errors.push(`build-feature: development reference differs: ${name}`);
+}
+
 if (errors.length) {
   console.error(errors.join('\n'));
   process.exitCode = 1;
 } else {
-  console.log(`Validated ${names.size} skills and their relative Markdown links.`);
+  console.log(`Validated ${names.size} skills, their relative Markdown links and development mirrors.`);
 }

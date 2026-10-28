@@ -4,6 +4,26 @@ Use this guide while implementing or refactoring names, decisions, and shared ru
 Keep the repository's conventions and the authorized behavior as the contract. Make
 ownership and execution clear as the code is written, not only during a cleanup pass.
 
+## Impact and scenarios for shared or risky changes
+
+Use an impact map when changing a shared rule/default, public or persisted contract,
+cross-module flow, or consequential auth/data/payment behavior. Identify the owner, then
+trace affected writers, readers, omitted/default call sites, UI/export consumers, caches,
+background paths and provider boundaries. Search symbols and duplicated literals; compare
+sibling implementations and transitive consumers. A small local change needs only its
+affected owner/callers and a focused check, not a written matrix.
+
+Choose scenarios from the actual contract: happy path plus relevant null/empty/zero,
+partial/mixed, stale, retry, duplicate, concurrent, locale/time-zone, cross-scope or
+legacy-data cases. Do not enumerate every category when irrelevant. Required behavior
+must not silently disappear when an argument is omitted; name and verify a valid fallback.
+
+Replay the map after implementation. Follow each changed invariant through the real
+write/read boundary and compare equivalent list/detail, web/admin, table/export and
+sync/async paths where affected. Check error feedback, cache identity, authorization,
+transaction and cleanup guarantees. Include generated consumers and deployed-resource
+identity when relevant. Fix introduced drift, not unrelated pre-existing debt.
+
 ## Repeated validation and literals
 
 1. Search the entire relevant source tree for the repeated value or regex fragment,
@@ -43,6 +63,10 @@ meaning as well as value: equal literals for independent policies must not becom
 shared setting. Conversely, different names for the same policy still need one owner.
 Verify that consumers use the authoritative value and that changing it has the intended
 effect. Obvious indices and increments need no constant; avoid a global constants dump.
+Keep shared limits with their contract, feature display settings with the feature and
+seed configuration with the seeder. Make duration units explicit; add a short human
+duration comment when arithmetic is unclear. Let an owner export canonical mappings and
+derive subsets or check their parity instead of maintaining disconnected copies.
 
 ## Types after validation
 
@@ -50,6 +74,13 @@ Trace where an untrusted value acquires a domain meaning. Keep `unknown` at that
 boundary until a schema or sound type guard establishes the contract, then propagate the
 owned domain type through internal consumers. Caught errors and genuinely heterogeneous
 containers can also need narrowing; their use of `unknown` is not itself a defect.
+
+Reuse exported boundary/domain types. A named contract should reveal meaning without
+copying another type's fields unnecessarily. `Pick`, `Omit`, `ReturnType` and other utility
+types are appropriate for clear mechanical relationships; give the result a domain name
+when it represents a public concept. Replace deep or fragile type machinery when it hides
+ownership or makes an unrelated implementation detail part of the contract. Follow local
+annotation conventions and avoid redundant annotations that add no boundary information.
 
 ```ts
 // Unsafe: the assertion promises an AnalysisJob without checking the input.
@@ -65,6 +96,11 @@ to and established by runtime validation. Replacing `unknown` with `any`, `{}` o
 also loses useful guarantees. Review the actual producer, validation and consumers before
 flagging an annotation. Literal `as const`, `satisfies` and import aliases are not equivalent
 to asserting an unvalidated domain object; apply any explicit repository restrictions.
+Fix contracts or narrow values instead of suppressing errors with unsafe assertions,
+non-null assertions or ignore directives. If a repository-permitted assertion is unavoidable
+at a library seam, keep it local and verify/document the invariant. Do not repeatedly
+parse trusted typed values without a concrete boundary reason. Preserve error status,
+cause and context; do not swallow failures or expose sensitive data in diagnostic logs.
 
 ## Names and control flow
 
@@ -87,6 +123,9 @@ to asserting an unvalidated domain object; apply any explicit repository restric
   distinction between bitwise and logical operators, including XOR semantics.
 - A sequence of guards is often readable. Inspect the decisions and their dependencies,
   not just the count of `if` statements. Follow the repository's brace and formatting rules.
+- Use a short ternary when both alternatives are easy to understand, including a small
+  object or array when idiomatic. Prefer a named value, guard or `if`/`else` for nested
+  decisions, substantial construction or branches with unrelated responsibilities.
 - Keep functions cohesive and orchestration at a consistent level of abstraction.
   Extract a meaningful operation or independently changing rule, such as loading a job
   or publishing its result. Keep lifecycle ownership visible in the caller; prefer a

@@ -32,15 +32,17 @@ the relevant tool's documentation; these examples are decision guidance, not a w
 
 ## Component organization
 
-- For inputs, changes, submits, and clicks, define named handlers before JSX and pass
-  stable references.
-- Compute non-trivial prop values before JSX and pass named variables. Keep inline props
-  to direct values or short simple expressions; do not construct objects, arrays, mapped
-  JSX trees, or multi-step callbacks inside a prop assignment.
+- Prefer named handlers for non-trivial behavior and pass an existing callable directly
+  rather than wrapping it. Short inline callbacks or adapters are fine when clearer.
+  A function declared during render is not stable merely because it has a name; stabilize
+  its identity only when a consumer/lifecycle contract or measurement requires it.
+- Name non-trivial prop calculations before JSX. Short inline objects, arrays or mapped
+  content can remain inline when they are easy to read and do not break an existing
+  identity-sensitive boundary. Extract substantial construction or multi-step logic.
 - Keep trivial one-line adapters in the component instead of building noisy hooks.
 - Follow the repository's form abstraction and validation path.
-- Define reusable form default values above the hook or component that creates the form,
-  then pass the named value to the form API.
+- Give reused form defaults a clear owner. Keep defaults that depend on props, identity
+  or request context in that scope; follow the form library's initialization/reset rules.
 - Keep views focused on composition. Move reusable behavior into the repository's
   established feature, hook, or library location.
 - Extract a component for shared semantic interaction and presentation, a hook or
@@ -58,13 +60,17 @@ the relevant tool's documentation; these examples are decision guidance, not a w
 - Keep route files focused on the routing contract, page metadata, data loading, and
   page composition. Move substantial forms and feature views into named component files
   so they can be read and reused without importing a route module.
-- When a form coordinates validation, async submission, server errors, navigation,
-  cache invalidation, or several related handlers, place that behavior in a feature hook
-  in the repository's established hooks location. Keep field markup and presentation in
-  the form component. Leave short field adapters local rather than hiding every handler
-  behind a hook.
+- For forms coordinating validation, submission, errors, navigation or cache changes,
+  extract a feature hook when it concentrates a cohesive responsibility, improves reuse
+  or makes orchestration materially easier to follow. A readable local submit handler
+  does not need a hook solely because it performs several related steps. Keep short
+  field adapters local and follow the repository's form conventions.
 - Do not split code into hooks or components that merely forward arguments without
   concentrating useful behavior.
+
+React permits both [named and inline event handlers](https://react.dev/learn/responding-to-events).
+[Callback memoization](https://react.dev/reference/react/useCallback) is a separate choice
+about identity and dependencies, not a prerequisite for a readable handler.
 
 ## Semantic HTML and interaction contracts
 

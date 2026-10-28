@@ -43,12 +43,12 @@ journey through the assembled application. Folder names and browser tools do not
 the category. Count executable cases consistently, excluding retries and environment-matrix
 repetitions; disclose parameterized-case counting, unknown cases, and skipped cases.
 
-When a reliable inventory is available, report counts, scope, and proportions over the
-classified cases. For a nonempty portfolio that differs from 80/15/5, flag the deviation,
-explain context, and inspect possible redundant or trivial tests. An unknown or empty
-inventory has no meaningful percentages; do not fabricate them. Small or boundary-heavy
-projects may justify another balance. Preserve a documented project strategy and explain
-the tradeoff rather than changing it silently.
+When a reliable inventory is relevant, report counts, scope and proportions with context.
+Do not emit an alert merely because the mix differs from 80/15/5: rounding and a project's
+real boundaries can justify another balance. Investigate an imbalance when it exposes
+missing coverage, costly duplication or measured runtime/flakiness concerns; explain that
+evidence and preserve a justified project strategy. Do not invent a universal tolerance.
+Unknown or empty inventories have no meaningful percentages.
 
 Before deleting or moving a test, identify the protected behavior and the remaining test
 that catches the same plausible defect, or establish that it checks no meaningful behavior.
@@ -82,6 +82,12 @@ Use for material UI or UX changes; follow frontend.md for framework-specific gui
 - Exercise the affected flow in the available browser or preview at representative
   narrow and wide viewports. Inspect overflow and long content. If visual tooling is
   unavailable, report that limit instead of claiming visual verification.
+- A targeted visual regression can protect an approved layout or a meaningful rendering
+  failure, such as an obscured action or broken responsive state. Use representative
+  screens/states, stable fixtures and a consistent browser/font/viewport environment;
+  inspect baseline changes rather than approving them automatically. Avoid incidental
+  CSS/class assertions, broad snapshots without a contract or one capture per component.
+  See [Playwright's visual comparison guidance](https://playwright.dev/docs/test-snapshots).
 
 ## Module and architecture decisions
 

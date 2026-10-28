@@ -2,8 +2,9 @@
 
 The preferred portfolio for this skill is **80% unit / 15% integration / 5% end-to-end**.
 It is the user's target for the distribution of tests, not an 80% code-coverage goal.
-Keep a visible alert for deviation, then investigate value and missing coverage before
-recommending changes. A ratio alone never justifies deleting a test or adding filler.
+Assess it during a requested suite review or when substantial test changes raise coverage
+or cost concerns. A numerical deviation alone is not an alert, deletion reason or reason
+to add filler; small samples and boundary-heavy systems can justify another balance.
 
 ## Classify actual boundaries
 
@@ -35,11 +36,12 @@ are unavailable, not zero. State the inspected scope: a changed subset is not a 
 repository inventory. If classification is incomplete, label the proportions provisional.
 Keep the baseline portfolio and changed-test mix distinct when both are useful.
 
-For a known mix different from 80/15/5, show a **portfolio deviation** alert with actual
-percentages, percentage-point differences, and relevant context. Explain small-sample
-rounding, service/component architecture, runtime cost, and missing boundaries. The
-alert is advisory; high-impact gaps or redundant tests, not the numerical difference,
-determine the severity of findings. If no evidence supports removal, say so.
+For a relevant inventory, show counts and proportions with their scope and limitations.
+Flag an imbalance only when evidence connects it to unprotected boundaries, costly
+duplication, or measured runtime/flakiness concerns. Explain small-sample rounding and
+service/component architecture rather than enforcing exact percentages or a new universal
+tolerance. Concrete gaps or redundant tests determine findings and their severity.
+If no evidence supports removal, say so.
 
 Google's [2015 testing article](https://testing.googleblog.com/2015/04/just-say-no-to-more-end-to-end-tests.html)
 offers 70/20/10 as an initial guess and says the mix varies by team. *Software Engineering
@@ -107,7 +109,10 @@ mandate to remove every slow test.
 
 Coverage reports, targeted mutation checks when already available, and prior regressions
 can reveal weak assertions. Coverage alone does not prove correct behavior. Do not add
-getters/setters, snapshots of static styling, or constant checks to raise a number.
+trivial accessor, constant or incidental styling checks to raise a number. A focused
+visual comparison can protect an approved UI contract when it catches a meaningful
+rendering defect and uses a stable, maintained baseline; a screenshot per component is
+not required.
 
 Sources were checked on 2026-10-27. These are original review instructions informed by
 the linked sources, not copied book or article text.
