@@ -5,14 +5,18 @@ import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {execFileSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
+import {createHash} from 'node:crypto';
 import {digest} from '../scripts/execution.mjs';
 
-test('a portable runtime renders offline without npm and escapes embedded JSON', async()=>{
+test('a portable runtime renders offline with CRLF assets, valid CSP and escaped JSON', async()=>{
   const dir=await mkdtemp(join(tmpdir(),'feature-doc-runtime-'));
   const root=fileURLToPath(new URL('../',import.meta.url));
   try {
     await cp(join(root,'scripts'),join(dir,'scripts'),{recursive:true});
     await cp(join(root,'assets'),join(dir,'assets'),{recursive:true});
+    const readerPath=join(dir,'assets/reader.js');
+    const reader=await readFile(readerPath,'utf8');
+    await writeFile(readerPath,reader.replace(/\r\n?|\n/g,'\r\n'));
     const doc=JSON.parse(await readFile(join(root,'examples/reader.prd.json'),'utf8'));
     doc.profile='product';delete doc.techPlan;
     doc.tasks.forEach(task=>task.planRefs=[]);
@@ -26,6 +30,9 @@ test('a portable runtime renders offline without npm and escapes embedded JSON',
     const embedded=html.match(/id="document-data">([^]*?)<\/script>/)[1];
     assert.equal(JSON.parse(embedded).document.title,doc.title);
     assert.equal((html.match(/<script/g)||[]).length,2);
+    const browserScript=html.match(/<script>([^]*?)<\/script>/)[1].replace(/\r\n?/g,'\n');
+    const cspHash=html.match(/script-src 'sha256-([^']+)'/)[1];
+    assert.equal(cspHash,createHash('sha256').update(browserScript).digest('base64'));
     assert.throws(()=>execFileSync(process.execPath,[join(dir,'scripts/prd.mjs'),'render',source,'--out',source],{stdio:'pipe'}));
     assert.equal(JSON.parse(await readFile(source,'utf8')).title,doc.title);
   }finally{await rm(dir,{recursive:true,force:true});}

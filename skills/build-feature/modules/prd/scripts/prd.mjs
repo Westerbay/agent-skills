@@ -103,7 +103,8 @@ async function main() {
   }
   const payload={document:doc,technicalPlan:plan,execution:state,diagrams,linkedPlan,specDigest:digest(doc)};
   const css=await readFile(new URL('../assets/reader.css',import.meta.url),'utf8');
-  const script=await readFile(new URL('../assets/reader.js',import.meta.url),'utf8');
+  // HTML normalizes newlines before CSP checks, including assets checked out with CRLF.
+  const script=(await readFile(new URL('../assets/reader.js',import.meta.url),'utf8')).replace(/\r\n?/g,'\n');
   const scriptHash=createHash('sha256').update(script).digest('base64');
   const safeJson=JSON.stringify(payload).replace(/</g,'\\u003c').replace(/\u2028/g,'\\u2028').replace(/\u2029/g,'\\u2029');
   const html=`<!doctype html><html lang="${doc.locale}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-${scriptHash}'; style-src 'unsafe-inline'; img-src data: blob:; font-src 'none'; connect-src 'none'; base-uri 'none'; form-action 'none'"><title>${escape(doc.title)}</title><style>${css}</style></head><body><div id="app">${renderDocument(payload)}</div><script type="application/json" id="document-data">${safeJson}</script><script>${script}</script></body></html>`;
