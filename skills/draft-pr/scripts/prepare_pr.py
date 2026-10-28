@@ -14,7 +14,7 @@ def git(repo, *args, optional=False):
     if result.returncode:
         if optional:
             return None
-        raise ValueError(result.stderr.decode().strip())
+        raise ValueError(result.stderr.decode('utf-8', errors='replace').strip())
     return result.stdout.decode('utf-8', errors='surrogateescape')
 
 
@@ -44,15 +44,16 @@ def planning_paths(repo, base, head):
     names.update(filter(None, git(repo, 'diff', '--cached', '--name-only', '-z').split('\0')))
     found = set()
     for name in names:
-        if re.search(r'(?:\.prd\.(?:md|json|html)|\.tech-plan\.(?:json|html)|\.run\.json|(?:^|/)(?:PRD|TECHNICAL_PLAN)\.(?:md|json|html))$', name, re.I):
-            found.add(name)
-            continue
-        if not name.endswith(('.json', '.html')):
+        planning_name = re.search(r'(?:\.prd\.(?:md|json|html)|\.tech-plan\.(?:json|html)|\.run\.json|(?:^|/)(?:PRD|TECHNICAL_PLAN)\.(?:md|json|html))$', name, re.I)
+        if not planning_name and not name.endswith(('.json', '.html')):
             continue
         for ref in [f'{head}:{name}', f':{name}']:
             content = git(repo, 'show', ref, optional=True)
-            if not content:
+            if content is None:
                 continue
+            if planning_name:
+                found.add(name)
+                break
             if name.endswith('.html'):
                 if 'id="document-data"' in content and 'Feature documents' in content:
                     found.add(name)
@@ -96,6 +97,9 @@ def template_path(explicit):
 
 
 def render_body(content, template, context):
+    if any(line.strip() and not line.startswith('## ') and line != '# Pull Request: [Title]'
+           for line in template.splitlines()):
+        raise ValueError('Template contains static text. Preserve and fill it directly, then use render --body-file instead of --content.')
     title = content.get('title', '').strip()
     description = content.get('description', '').strip()
     if not title or '\n' in title or not description:
@@ -136,7 +140,7 @@ def render_body(content, template, context):
     for heading in headings:
         matches = [key for key in body if heading.endswith(key)]
         if not matches:
-            raise ValueError(f'Unsupported custom PR.md section: {heading}. Adapt the mapping explicitly.')
+            raise ValueError(f'Unsupported structured PR section: {heading}. Preserve and fill the template directly, then use render --body-file.')
         key = matches[0]
         if body[key]:
             sections.append(f'## {heading}\n\n{body[key]}')
@@ -159,39 +163,58 @@ def main():
     command.add_argument('--out', required=True, type=Path, help='New directory for context.json and diff.patch')
     command = sub.add_parser('render')
     command.add_argument('--context', required=True, type=Path)
-    command.add_argument('--content', required=True, type=Path)
+    source = command.add_mutually_exclusive_group(required=True)
+    source.add_argument('--content', type=Path, help='Structured JSON for the bundled or a heading-only template')
+    source.add_argument('--body-file', type=Path, help='Already authored UTF-8 Markdown, preserved without template rewriting')
     command.add_argument('--template')
     command.add_argument('--out', required=True, type=Path)
     command = sub.add_parser('preflight')
     command.add_argument('--context', required=True, type=Path)
+    command.add_argument('--allow-planning-file', action='append', default=[], metavar='REPO_PATH',
+                         help='Exact detected path explicitly authorized for publication; repeat per file')
     command.add_argument('--allow-planning-documents', action='store_true', help='Only after explicit permission to publish these documents')
     args = parser.parse_args()
     if args.command == 'collect':
         context, diff = collect(args.repo, args.base)
         args.out.mkdir(parents=True, exist_ok=False)
-        (args.out / 'context.json').write_text(json.dumps(context, indent=2) + '\n')
-        (args.out / 'diff.patch').write_text(diff, errors='surrogateescape')
+        (args.out / 'context.json').write_text(json.dumps(context, indent=2) + '\n', encoding='utf-8')
+        (args.out / 'diff.patch').write_bytes(diff.encode('utf-8', errors='surrogateescape'))
         print(json.dumps({'context': str((args.out / 'context.json').resolve()), 'stat': context['stat'], 'planningFiles': context['planningFiles']}))
     else:
-        context = json.loads(args.context.read_text())
+        context = json.loads(args.context.read_text(encoding='utf-8'))
         if args.command == 'render':
-            body = render_body(json.loads(args.content.read_text()), template_path(args.template).read_text(), context)
+            if args.body_file:
+                if args.template:
+                    raise ValueError('--body-file already contains the filled template; do not also pass --template')
+                body = args.body_file.read_bytes().decode('utf-8')
+                if not body.strip():
+                    raise ValueError('Provide a nonempty authored PR body')
+            else:
+                body = render_body(json.loads(args.content.read_text(encoding='utf-8')),
+                                   template_path(args.template).read_text(encoding='utf-8'), context)
             args.out.parent.mkdir(parents=True, exist_ok=True)
-            args.out.write_text(body)
+            args.out.write_text(body, encoding='utf-8', newline='')
             print(args.out.resolve())
         else:
             current, _ = collect(context['repository'], context['base'])
             for key in ['branch', 'baseSha', 'headSha', 'diffDigest']:
                 if current[key] != context[key]:
                     raise ValueError(f'PR context changed ({key}); collect and review it again')
-            if current['planningFiles'] and not args.allow_planning_documents:
-                raise ValueError(f"Planning documents would be published: {current['planningFiles']}. Preserve local copies and exclude them unless explicitly authorized.")
+            allowed = set(args.allow_planning_file)
+            unknown = allowed - set(current['planningFiles'])
+            if unknown:
+                raise ValueError(f'Planning-file exceptions must match exact detected paths: {sorted(unknown)}')
+            blocked = sorted(set(current['planningFiles']) - allowed)
+            if blocked and not args.allow_planning_documents:
+                raise ValueError(f"Planning documents would be published: {blocked}. Preserve local copies and exclude them unless explicitly authorized.")
             if not current['files']:
                 raise ValueError('No committed changes to publish')
             print(json.dumps({'ready': True, 'branch': current['branch'], 'base': current['base'], 'uncommitted': current['status'], 'publication': 'Requires existing user authority; this command performed no external writes.'}))
 
 
 if __name__ == '__main__':
+    sys.stdout.reconfigure(encoding='utf-8')
+    sys.stderr.reconfigure(encoding='utf-8')
     try:
         main()
     except (ValueError, OSError, KeyError, TypeError) as error:

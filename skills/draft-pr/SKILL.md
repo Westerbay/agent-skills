@@ -38,16 +38,29 @@ supplied by the user or directly referenced by this change. Omit Related Issues 
 when none are relevant. Reference issues informationally, never auto-close unless the user
 explicitly asks to close that exact issue.
 
-Read [references/content.md](references/content.md), then author the content JSON:
+Follow the repository's PR template when one exists. Fill its headings, static
+instructions and checklists directly in a UTF-8 Markdown file; keep the description
+proportional to the change. The structured renderer is optional. To save an authored
+body without rewriting its template:
+
+```bash
+python3 <draft-pr-skill>/scripts/prepare_pr.py render --context <context.json> --body-file <authored.md> --out <body.md>
+```
+
+This preserves the authored text exactly; it does not verify its claims or approve
+publication. Inspect it against the committed diff and actual check evidence.
+
+For the bundled template, read [references/content.md](references/content.md), author
+the content JSON, then run:
 
 ```bash
 python3 <draft-pr-skill>/scripts/prepare_pr.py render --context <context.json> --content <content.json> --out <body.md>
 ```
 
-The script uses [assets/PR.md](assets/PR.md) by default. For an applicable repository or
-user-selected template, pass `--template <template-path>`. It preserves section order,
-strips empty categories and adds UI screenshot placeholders. Unsupported custom headings
-produce a visible error; adapt their mapping or agree on a supported template.
+The structured route uses [assets/PR.md](assets/PR.md) by default. `--template` accepts a
+heading-only variant using the same section names. It preserves section order, strips
+empty categories and adds UI screenshot placeholders. Other headings or static template
+content use the authored-body route; do not discard them or build a template engine.
 Inspect the rendered body: behavior first, no file-by-file noise, no unrun tests asserted.
 Mention migrations, configuration, breaking changes and follow-up only when relevant.
 
@@ -84,9 +97,14 @@ never invent a screenshot URL or claim a source-only diagram was rendered.
 python3 <draft-pr-skill>/scripts/prepare_pr.py preflight --context <context.json>
 ```
 
-This rejects a changed branch/base/HEAD and planning artifacts in the branch/index.
+This rejects a changed branch/base/HEAD and changed planning artifacts still present in
+committed HEAD or the index. Pure deletions are not treated as publication; a staged
+deletion does not hide a planning file still present in the commit being published.
 Preserve local copies when excluding PRDs, technical plans and run records.
-`--allow-planning-documents` requires explicit authorization to publish those exact docs.
+For an explicitly authorized document or a verified source fixture included in the
+requested change, use `--allow-planning-file <exact-repo-path>` once per approved file.
+No glob or automatic fixture exemption is allowed. `--allow-planning-documents` is only
+for explicit authorization covering every detected document; prefer exact exceptions.
 Recollect after a new commit. These checks do not establish delivery authority.
 
 Verify the exact target repository, remote and existing PRs for this head branch before
