@@ -1,93 +1,118 @@
 # Execution record (version 2)
 
-`<feature>.run.json` records actual evidence separately from the two specification JSON
-files. Resolve the installed `prd.mjs` once. All execution commands accept
-`--plan <feature>.tech-plan.json`; supply it throughout implementation.
-The helper never starts agents, edits code, creates Git commits or publishes requests.
+`<feature>.run.json` records observations separately from PRD and technical-plan JSON.
+Resolve `prd.mjs` once; supply `--plan <plan.json>` throughout implementation. The helper
+never starts agents, edits feature code, creates Git commits or publishes requests.
 
-## Approve once after scope
+## Approvals and source identity
 
-1. `init-run <prd.json> --state <run.json> --plan <plan.json>` creates a version 2 run,
+1. `init-run <prd.json> --state <run.json> --plan <plan.json>` creates a new record,
    refuses overwrite and accepts `--delivery local|review-request` (default local).
 2. `approve <prd.json> --state <run.json> --plan <plan.json> --gate A --revision <scope-rev>
-   --evidence <explicit-user-message-reference>` records scope approval and delivery mode.
-   Optional `--authority branch,commit,push,draft-pr` records only authorized actions.
-3. After presenting the combined HTML, repeat with `--gate B --revision <prd-revision>`
-   and the actual combined approval evidence. B binds both the PRD and plan fingerprints,
-   records the plan revision, and requires complete requirement/task/check coverage.
-   There is no Gate C. Evidence text is not an automatic consent mechanism.
+   --evidence <explicit-user-reference>` records actual scope/delivery approval. Optional
+   `--authority branch,commit,push,draft-pr` records only authorized actions.
+3. After showing the combined HTML, repeat with `--gate B --revision <prd-revision>` and
+   the actual approval evidence. B binds both source contracts and their revisions and
+   requires complete requirement/task/check coverage. No separate Gate C exists.
 
-## Parallel implementation
+New records use `fingerprintMode: "contract-v1"`. Gate A has a separate product-scope
+fingerprint; Gate B binds PRD/plan contract fingerprints. Only document locale and root,
+requirement, task and technical-entry titles are excluded. Titles are display labels;
+put behavior in descriptions, acceptance, bodies and other contract fields. Summaries,
+diagrams, scopes, checks and revisions remain binding. Title/locale-only edits need a
+re-render, not reapproval; behavior edits without a revision bump still invalidate state.
 
-`next <prd.json> --state <run.json> --plan <plan.json>` returns:
+Legacy v2 records without `fingerprintMode` retain full-document hashing. Never silently
+upgrade them or edit stored hashes. For material source changes, start an explicit revision
+and carry forward only decisions/evidence still valid for that scope and contract.
+Evidence strings record human decisions; they cannot establish consent by themselves.
 
-- `ready`: all eligible `taskIds`, a conservative disjoint `parallelTaskIds` batch,
-  active tasks and any `blockedByScope` entries;
-- `in-progress`: active tasks when no new disjoint task can start;
-- `feature`: the combined phase and `nextPhases` after all CODE tasks validate;
-- `delivery`: dependency-ready task IDs after the final feature review;
-- `human-qa`, `task-chain-complete`, or an explicit blocker.
+## Parallel CODE work
 
-Use `task-context <prd.json> CODE-001 --plan <plan.json> --state <run.json>
---out <context.json>` for each worker's requirements, owned scope and technical references.
-The excerpt includes source paths, PRD and plan digests, approved run evidence when
-`--state` is supplied, and feature framing. It does not verify that linked designs are
-accessible or that a worker read them. Follow the
-[dispatch contract](../../../references/implementation-orchestration.md#carry-the-approved-contract-into-each-assignment)
-to check coverage and pass the actual approved design references before implementation.
-Without state, this is a planning excerpt, not execution authority.
+`next <prd.json> --state <run.json> --plan <plan.json>` reports ready task IDs, a conservative
+`parallelTaskIds` batch, active work and scope conflicts; otherwise it reports the feature,
+delivery or human-QA phase, completion or a blocker. Feature results include delivery-check
+blockers and `continuationRequiresAuthorization` when the review allowance is exhausted.
+A clean result can still deliver; only further correction/review needs that authorization.
 
-Record each CODE task with `record-task <prd.json> CODE-001 --state <run.json>
+Generate `task-context <prd.json> CODE-001 --plan <plan.json> --state <run.json>
+--out <context.json>` for each worker. It carries readable source paths, feature framing,
+selected full technical entries, applicable `checkWaivers` and `reviewAuthorizations`.
+Top-level `specDigest`/`planDigest`
+identify the raw current documents; `execution` carries the approval fingerprint mode
+and contract digests. These can differ after a presentation edit. Without `--state`, the
+excerpt is for planning and grants no execution authority. The helper cannot fetch design
+attachments or prove reading; follow the [dispatch contract](../../../references/implementation-orchestration.md#carry-the-approved-contract-into-each-assignment).
+
+Record CODE observations with `record-task <prd.json> CODE-001 --state <run.json>
 --plan <plan.json> --phase <phase> --evidence <actual-observation>`:
-`started -> implemented -> validated`. Starting checks prerequisites and claims its scope
-against active writers; validation releases dependencies before review or publication.
-Concrete file/subtree scopes support parallelism; ambiguous/glob scopes serialize.
-Path matching is conservative and textual: the coordinator must also check symlinks,
-shared generated outputs and non-file resources. No task may depend on human acceptance.
+`started -> implemented -> validated`. Starting claims scope and checks dependencies;
+validation releases dependent implementation, not delivery. Literal file/subtree scopes
+support parallelism; unknown/glob scopes serialize. The coordinator also checks symlinks,
+generated outputs and shared non-file resources. CODE never depends on human acceptance.
 
-## One feature review, then task deliveries
+## Integrated review and bounded continuation
 
 Use `record-feature <prd.json> --state <run.json> --plan <plan.json>
---phase <phase> --evidence <actual-observation>` for the integrated sequence:
+--phase <phase> --evidence <actual-observation>` for:
 
 ```text
 integrated -> validated -> simplified -> revalidated -> reviewed -> ready-to-deliver
                                                    -> corrected -> revalidated -> reviewed
 ```
 
-All CODE tasks must be validated first. `reviewed` records the aggregate of all selected
-specialists, not an individual reply. The correction path allows at most two feature
-review rounds. Evidence does not prove a clean verdict: the coordinator must resolve
-material findings, verify coverage and compare the actual tree to the reviewed snapshot
-before advancing. No third loop or resetting the run to evade the limit.
-If preparing task diffs reveals a problem after the first `ready-to-deliver`, `corrected`
-is still allowed before any task enters `ready-to-open`; revalidation and the second
-review are required before delivery can resume.
+All CODE tasks validate first. `simplified` can record that inspection found no useful
+change; `revalidated` can reference still-valid checks for unchanged code/inputs. No extra
+writer or duplicate test run is required solely to advance those states. `reviewed` records
+one aggregate of the selected general/specialist reviewers, not one phase per reviewer.
 
-After `ready-to-deliver`, record each CODE task's `ready-to-open`, then `delivered-local`
-or `published` according to mode. Delivery follows dependency order. `published` requires
-recorded push/draft-pr authority and `--pr <actual-https-url>`; each task has its own URL.
-`draft-pr` also means draft MR. Local delivery requires an actual saved checkpoint.
-Global evidence freezes when task delivery starts; substantive subsequent changes require
-an explicit scoped revision, not rewriting delivered review history.
+Two rounds may run autonomously. If more correction/review is needed after that allowance
+is consumed, obtain explicit user authorization for the specific unresolved work, then run:
+
+```bash
+node <prd-dir>/scripts/prd.mjs authorize-review <prd.json> --state <run.json> --plan <plan.json> --evidence <actual-user-authorization> --reason <specific-unresolved-finding>
+```
+
+This grants one additional round while retaining history, only before task delivery begins.
+Never reset the run to evade the limit or treat exhausting it as a clean verdict. Review
+identity is checked by the separate review helper; the coordinator still resolves material
+findings, verifies coverage and compares the final tree with the reviewed snapshot.
+
+## Delivery checks and accepted limitations
 
 Use `record-check <prd.json> CHECK-001 --state <run.json> --plan <plan.json>
---result passed|failed|blocked --evidence <actual-result>` for observations.
-Planned checks remain in the specification. Human QA can receive only `accepted`, after
-all CODE deliveries and with an actual human acceptance message; never infer acceptance.
+--result passed|failed|blocked --evidence <actual-result>` for observations. Checks default
+to `stage: "delivery"`. Every such check must pass before `ready-to-deliver`, task delivery
+and delivery suggestions from `next`; missing, failed or blocked results prevent progress.
+Explicit `stage: "acceptance"` checks belong to post-delivery human acceptance and do not
+block delivery. A manual route alone does not defer a check. Set stages in the approved plan.
 
-Re-render `render <prd.json> --plan <plan.json> --state <run.json>` to show the combined
-plan, global review evidence and each delivery. Scripts cannot judge evidence truth.
+If the user explicitly accepts one unresolved delivery check's exact limitation, record:
 
-## Compatibility and state safety
+```bash
+node <prd-dir>/scripts/prd.mjs waive-check <prd.json> CHECK-001 --state <run.json> --plan <plan.json> --evidence <actual-user-acceptance> --reason <specific-limitation>
+```
 
-Document schema remains version 1. Legacy execution version 1 used three approvals and
-per-task review; the new helper rejects it with a migration message. Preserve that record
-and its delivered work. Prepare the combined plan and obtain its explicit approval,
-then initialize a separate version 2 run. Carry forward only verified observations;
-never copy old B/C approvals as if they approved the new workflow, fabricate reviews,
-or reset a review limit. Historical HTML stays readable.
+The waiver binds that check and current observation (or absence); it does not turn failure
+into success. A new observation invalidates it. Never infer acceptance, waive other checks
+by analogy or change a check's stage to bypass the guard. Disclose accepted limitations.
 
-The state writer uses a lock and atomic replacement. If a crashed process leaves a lock,
-confirm its owner is gone before removing that exact lock. Stale fingerprints require
-valid approval of the changed source; never edit hashes to force an old approval through.
+## Deliver and preserve history
+
+After `ready-to-deliver`, record each CODE task's `ready-to-open`, then `delivered-local`
+or `published` in dependency order. Local delivery needs a saved attributable checkpoint;
+publication needs recorded push/draft-pr authority and `--pr <actual-https-url>`, unique
+per CODE. These names also cover draft MRs. No command itself publishes a request.
+
+Before delivery starts, a newly discovered problem can re-enter `corrected` using the
+remaining or explicitly extended review allowance. Once any task enters `ready-to-open`,
+feature evidence freezes: preserve delivered snapshots and assess a new scoped revision.
+Human QA receives `accepted` only after all CODE deliveries and actual human acceptance.
+Re-render with `--state` to show observed results and waiver reasons/evidence. A waived
+check retains its actual failed/blocked status; acceptance must not be displayed as a pass.
+
+Schema v1 execution records used three gates and per-task reviews. Preserve them, prepare
+the combined plan and obtain its actual approval before initializing a separate v2 run;
+never relabel old B/C approvals or erase delivered history. Document schema remains v1.
+The writer locks state and uses atomic replacement. Before removing an abandoned lock,
+confirm its owner is gone and target only that lock. Never edit hashes to force approval.

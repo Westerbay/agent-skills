@@ -24,9 +24,11 @@ combining logic/UML, relevant reuse, acceptance and a task graph in one HTML. In
 CODE tasks receive the linked approved UML, schemas and UX/UI references with their
 acceptance criteria, then run in parallel with exclusive write scopes and targeted
 conformance checks. Missing context is resolved before dependent work. After all
-tasks validate, one integrated simplification/review cycle applies accepted refactors;
-at most two review rounds cover the whole feature. Quality and web feed the quality
-dimension; architecture and security select full review. A focused SOLID design critique
+tasks validate, integration checks for useful simplifications and one review cycle applies
+accepted refactors. A general reviewer covers correctness, regression, conventions and
+quality; architecture, web and security are selected independently when relevant. Each
+reply is bound to the exact patch digest. Two rounds are autonomous; explicit user
+authorization can grant one additional focused round while preserving history. A SOLID design critique
 prepares Gate B without another approval or formal review round.
 See [specialist routing](skills/build-feature/modules/review/references/specialist-reviews.md).
 Skills remain independent and optional; missing companions use disclosed bundled criteria.
@@ -34,8 +36,10 @@ Skills remain independent and optional; missing companions use disclosed bundled
 Delivery then produces one small local checkpoint or authorized draft PR/MR per CODE task,
 with independent or explicit stacked bases. Each request contains its task's change, not
 the cumulative feature diff. See [small task deliveries](skills/build-feature/references/delivery.md).
-Execution records now use version 2; old three-gate records are preserved and require an
-explicit combined-plan approval before starting a new run. Document schemas stay at version 1.
+Execution records use version 2. New records distinguish display titles/language from
+approved behavior; legacy records retain their original fingerprint rules. Delivery
+requires passed checks or explicit, check-specific accepted limitations; human acceptance
+checks are identified separately in the approved plan. Document schemas stay at version 1.
 
 ## Install
 
@@ -99,8 +103,10 @@ Use $security-audit for a focused security review of this diff.
 ```
 
 The test portfolio target is 80% unit, 15% integration and 5% end-to-end. It is a review
-signal, not a code-coverage target or a reason to delete useful tests. Deviations should
-produce an alert with context; removal requires evidence of redundant or trivial coverage.
+signal, not a code-coverage target or a reason to delete useful tests. Assess meaningful
+imbalances, missing boundary coverage, redundancy and cost during suite reviews; a small
+numerical deviation alone does not trigger an alert. Removal requires evidence of
+redundant or trivial coverage.
 Function size, complexity and folder size similarly guide investigation rather than
 mechanical splitting or speculative abstractions.
 TDD starts only for useful new/regressed behavior. Reuse sufficient existing tests;

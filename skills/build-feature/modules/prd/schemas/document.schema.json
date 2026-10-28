@@ -383,6 +383,9 @@
             "type": "string",
             "minLength": 1
           },
+          "stage": {
+            "enum": ["delivery", "acceptance"]
+          },
           "risk": {
             "type": "string",
             "minLength": 1

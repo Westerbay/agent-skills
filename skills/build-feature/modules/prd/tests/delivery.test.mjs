@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {newExecution, approve, recordTask, recordFeature, nextTask, validateExecution, digest} from '../scripts/execution.mjs';
+import {newExecution, approve, recordTask, recordFeature, recordCheck, waiveCheck, authorizeReview, nextTask, validateExecution, digest} from '../scripts/execution.mjs';
 
 function scenario(mode = 'local', authorities) {
   const plan = {schemaVersion:1,kind:'tech-plan',id:'plan',revision:'1',locale:'en',title:'Plan',summary:'Plan',constraints:[],entries:[{id:'DEC-1',kind:'decision',title:'Local',body:'Local delivery',global:true,refs:[]} ]};
@@ -18,6 +18,7 @@ function implemented({doc,plan,state}, id) {
 }
 
 function reviewed({doc,plan,state}, ready=true) {
+  for(const check of doc.checks) if(check.stage !== 'acceptance') recordCheck(doc,state,plan,check.id,'passed','Observed fixture check');
   const phases=['integrated','validated','simplified','revalidated','reviewed'];
   if(ready)phases.push('ready-to-deliver');
   for(const phase of phases) recordFeature(doc,state,plan,phase,'Observed integrated fixture evidence');
@@ -157,7 +158,7 @@ test('Gate B binds both sources and their revisions without a separate Gate C',(
   assert.throws(()=>approve(doc,state,plan,'B','plan-2','Wrong revision'),/implementation document revision/);
   approve(doc,state,plan,'B','1','Synthetic combined approval');
   assert.equal(state.approvals.B.planRevision,'plan-2');
-  assert.equal(state.approvals.B.digest,digest({specDigest:digest(doc),planDigest:digest(plan)}));
+  assert.equal(state.approvals.B.digest,digest({specDigest:state.specDigest,planDigest:state.planDigest}));
   assert.throws(()=>approve(doc,state,plan,'C','1','Obsolete gate'),/gate A\/B/);
   assert.throws(()=>validateExecution({...doc,summary:'Changed'},state,plan),/stale/);
   assert.throws(()=>validateExecution(doc,state,{...plan,summary:'Changed'}),/technical-plan digest/);
@@ -179,4 +180,77 @@ test('human acceptance cannot block CODE work before the final delivery stage',(
   const {doc,plan}=scenario();
   doc.tasks[0].dependsOn=['QA-1'];doc.tasks[2].dependsOn=[];
   assert.throws(()=>newExecution(doc,plan),/CODE tasks cannot depend on human QA/);
+});
+
+test('delivery refuses missing or failed required checks and a later failure blocks publication',()=>{
+  const s=scenario('review-request',['push','draft-pr']);
+  implemented(s,'CODE-1');implemented(s,'CODE-2');
+  for(const phase of ['integrated','validated','simplified','revalidated','reviewed']) recordFeature(s.doc,s.state,s.plan,phase,'Synthetic observed phase');
+  assert.throws(()=>recordFeature(s.doc,s.state,s.plan,'ready-to-deliver','Claimed ready'),/CHECK-1.*missing/);
+  recordCheck(s.doc,s.state,s.plan,'CHECK-1','failed','Observed regression');
+  assert.throws(()=>recordFeature(s.doc,s.state,s.plan,'ready-to-deliver','Claimed ready'),/CHECK-1.*failed/);
+  recordCheck(s.doc,s.state,s.plan,'CHECK-1','passed','Observed repaired behavior');
+  recordFeature(s.doc,s.state,s.plan,'ready-to-deliver','Checks and review complete');
+  recordTask(s.doc,s.state,s.plan,'CODE-1','ready-to-open','Verified task patch');
+  recordCheck(s.doc,s.state,s.plan,'CHECK-1','failed','New failure before push');
+  assert.equal(nextTask(s.doc,s.state,s.plan).status,'blocked');
+  assert.throws(()=>recordTask(s.doc,s.state,s.plan,'CODE-1','published','Claimed publication','https://example.test/pr/1'),/CHECK-1.*failed/);
+});
+
+test('editorial titles do not invalidate contracts, but acceptance and schema changes do',()=>{
+  const s=scenario();
+  const doc=structuredClone(s.doc),plan=structuredClone(s.plan);
+  doc.title+='.';doc.tasks[0].title+='.';doc.requirements[0].title+='.';plan.entries[0].title+='.';
+  assert.doesNotThrow(()=>validateExecution(doc,s.state,plan));
+  doc.requirements[0].acceptance=['Different behavior'];
+  assert.throws(()=>validateExecution(doc,s.state,plan),/stale/);
+  plan.entries[0].body='Different schema';
+  assert.throws(()=>validateExecution(s.doc,s.state,plan),/technical-plan/);
+});
+
+test('acceptance checks stay post-delivery and specific user waivers expire on a new observation',()=>{
+  const {doc,plan}=scenario();
+  doc.checks.push({...doc.checks[0],id:'CHECK-QA',stage:'acceptance'});
+  const state=newExecution(doc,plan),s={doc,plan,state};
+  for(const gate of ['A','B']) approve(doc,state,plan,gate,'1','Synthetic approval');
+  implemented(s,'CODE-1');implemented(s,'CODE-2');reviewed(s,false);
+  recordCheck(doc,state,plan,'CHECK-1','blocked','Unavailable isolated environment');
+  assert.throws(()=>waiveCheck(doc,state,plan,'CHECK-1','','Missing environment'),/explicit user acceptance/);
+  waiveCheck(doc,state,plan,'CHECK-1','Synthetic user acceptance of this limitation','Environment unavailable; owner will run it');
+  recordFeature(doc,state,plan,'ready-to-deliver','Accepted exact limitation');
+  assert.equal(nextTask(doc,state,plan).status,'delivery');
+  assert.equal(state.checks['CHECK-1'].result,'blocked');
+  assert.equal(state.checks['CHECK-QA'],undefined);
+  recordCheck(doc,state,plan,'CHECK-1','failed','Environment restored; observed actual defect');
+  assert.equal(state.checkWaivers['CHECK-1'],undefined);
+  assert.equal(nextTask(doc,state,plan).status,'blocked');
+});
+
+test('one explicit continuation preserves review history and cannot grant unlimited rounds',()=>{
+  const s=scenario();
+  implemented(s,'CODE-1');implemented(s,'CODE-2');reviewed(s,false);
+  assert.throws(()=>authorizeReview(s.doc,s.state,s.plan,'User agreement','Specific remaining issue'),/exhausted/);
+  for(const phase of ['corrected','revalidated','reviewed']) recordFeature(s.doc,s.state,s.plan,phase,'Second reviewed snapshot');
+  assert.equal(nextTask(s.doc,s.state,s.plan).continuationRequiresAuthorization,true);
+  assert.throws(()=>authorizeReview(s.doc,s.state,s.plan,'','Fix issue'),/explicit user authorization/);
+  authorizeReview(s.doc,s.state,s.plan,'Synthetic explicit user continuation','Fix remaining serialization regression');
+  assert.throws(()=>authorizeReview(s.doc,s.state,s.plan,'Same agreement','Duplicate authorization'),/exhausted/);
+  assert.ok(nextTask(s.doc,s.state,s.plan).nextPhases.includes('corrected'));
+  for(const phase of ['corrected','revalidated','reviewed']) recordFeature(s.doc,s.state,s.plan,phase,'Authorized third snapshot');
+  assert.equal(s.state.feature.reviewPasses,3);
+  assert.equal(s.state.feature.history.filter(item=>item.phase==='reviewed').length,3);
+  assert.throws(()=>recordFeature(s.doc,s.state,s.plan,'corrected','Unauthorized fourth round'),/explicit continuation/);
+  recordFeature(s.doc,s.state,s.plan,'ready-to-deliver','Corrected result ready');
+  recordTask(s.doc,s.state,s.plan,'CODE-1','ready-to-open','Verified delivery');
+  assert.throws(()=>authorizeReview(s.doc,s.state,s.plan,'Later request','Change delivered snapshot'),/frozen/);
+});
+
+test('legacy v2 records retain their full-source fingerprint policy',()=>{
+  const {doc,plan}=scenario();
+  const state=newExecution(doc,plan);
+  delete state.fingerprintMode;delete state.scopeDigest;
+  state.specDigest=digest(doc);state.planDigest=digest(plan);
+  for(const gate of ['A','B']) approve(doc,state,plan,gate,'1','Synthetic legacy approval');
+  assert.doesNotThrow(()=>validateExecution(doc,state,plan));
+  assert.throws(()=>validateExecution({...doc,title:'New title'},state,plan),/stale/);
 });

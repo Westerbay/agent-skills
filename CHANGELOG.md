@@ -2,6 +2,19 @@
 
 ## Unreleased
 
+- Block delivery on missing, failed or blocked delivery checks, with explicit per-check
+  user waivers and a separate acceptance stage. Bind review replies to the exact patch
+  digest and select a general reviewer plus only relevant specialists.
+- Allow one explicitly authorized review continuation after the two autonomous rounds,
+  preserving history. Keep title/language edits separate from behavioral contracts in
+  new execution records; legacy records retain their existing fingerprint policy.
+- Shorten the development entrypoint, scale investigation to risk and make stylistic
+  preferences contextual. Permit targeted visual regressions and assess the 80/15/5
+  preference by evidence rather than alerting on every numerical deviation.
+- Preserve custom PR templates through direct authored bodies, use explicit UTF-8 and
+  distinguish deleted planning files from published documents. Add exact-file publication
+  exceptions, draft-PR tests in CI and automated parity checks for development mirrors.
+
 - Preserve approved feature framing in CODE task excerpts and carry linked UML, schemas
   and UX/UI decisions into worker assignments. Verify context access before coding and
   conformance during task validation and the existing integrated review.
