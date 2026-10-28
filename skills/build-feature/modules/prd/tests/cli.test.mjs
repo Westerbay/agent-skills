@@ -96,7 +96,7 @@ test('worker context identifies approved sources and refuses an edited plan with
     assert.deepEqual(context.sourceFiles,{prd:source,technicalPlan:planPath,execution:state});
     assert.equal(context.specDigest,digest(doc));
     assert.equal(context.planDigest,digest(plan));
-    assert.equal(context.execution.approvals.B.digest,digest({specDigest:context.specDigest,planDigest:context.planDigest}));
+    assert.equal(context.execution.approvals.B.digest,digest({specDigest:context.execution.specDigest,planDigest:context.execution.planDigest}));
     assert.equal(context.execution.tasks[taskId].phase,'started');
     await writeFile(out,JSON.stringify(context));
     plan.entries[0].body+=' Changed design without a new revision.';
@@ -130,9 +130,19 @@ test('CLI runs parallel implementation, one combined review, and separate local 
     }
     assert.equal(sawParallelBatch,true);
     assert.equal(next.status,'feature');
+    const specification=JSON.parse(await readFile(source,'utf8'));
+    for(const check of specification.checks.filter(check=>check.stage!=='acceptance'))
+      cli('record-check',check.id,'--result','passed','--evidence','Synthetic observed check');
     assert.throws(()=>cli('record-task',first,'--phase','ready-to-open','--evidence','Attempt to skip final review'),/final feature review/);
     for(const phase of ['integrated','validated','simplified','revalidated','reviewed','ready-to-deliver'])
       cli('record-feature','--phase',phase,'--evidence','Synthetic observed cumulative feature evidence');
+    const checkId=specification.checks[0].id;
+    cli('record-check',checkId,'--result','blocked','--evidence','Synthetic missing environment');
+    assert.equal(cli('next').status,'blocked');
+    assert.throws(()=>cli('waive-check',checkId,'--reason','Environment unavailable'),/explicit user acceptance/);
+    cli('waive-check',checkId,'--evidence','Synthetic user acceptance of unavailable environment','--reason','Run the isolated check during owner acceptance');
+    const checkOwner=specification.tasks.find(task=>task.requirementIds.some(id=>specification.checks[0].requirementIds.includes(id)));
+    assert.equal(cli('task-context',checkOwner.id).execution.checkWaivers[checkId].reason,'Run the isolated check during owner acceptance');
     while((next=cli('next')).status==='delivery') {
       for(const id of next.taskIds) {
         for(const phase of ['ready-to-open','delivered-local']) cli('record-task',id,'--phase',phase,'--evidence','Saved synthetic task checkpoint');
@@ -151,6 +161,8 @@ test('CLI runs parallel implementation, one combined review, and separate local 
     assert.ok(html.includes('Delivered locally'));
     assert.ok(!html.includes('>delivered-local<'));
     assert.ok(html.includes('sequenceDiagram'));
+    assert.ok(html.includes('Accepted limitation'));
+    assert.ok(html.includes('Run the isolated check during owner acceptance'));
     assert.ok(!html.includes('Gate C'));
     const payload=JSON.parse(html.match(/id="document-data">([^]*?)<\/script>/)[1]);
     assert.equal(payload.technicalPlan.id,'feature-documents-plan');

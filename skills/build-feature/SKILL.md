@@ -20,7 +20,7 @@ source; generated HTML supports offline reading, math and copying diagrams as im
 ```text
 Discovery -> Gate A: scope -> Gate B: implementation plan (logic + UML + task graph)
           -> Ready CODE tasks in parallel -> Integration and validation
-          -> One simplification/review cycle -> Corrections and verification if needed
+          -> Simplification inspection and final review -> Corrections if needed
           -> Small delivery per CODE task -> Human acceptance
 ```
 
@@ -32,8 +32,7 @@ to implement does not authorize commits, pushes, external review requests or dep
 At Gate A, choose `local` (default) or `review-request` delivery and record each authorized
 Git/external action. Use [Git conventions](modules/development/references/git-conventions.md):
 English `type(scope): summary` commits and `<type>/<short-kebab-case-description>`
-branches, including `build`, `chore`, `ci`, `docs`, `feat`, `fix`, `perf`, `refactor`,
-`revert`, `style` and `test` as appropriate. Do not prepend `codex/` to generated names.
+branches, using the appropriate change type. Do not prepend `codex/` to generated names.
 Keep explicit user names and existing work intact; naming rules do not authorize Git writes.
 
 ## 1. Approve the scope
@@ -67,11 +66,11 @@ node <skill-dir>/modules/prd/scripts/prd.mjs validate <feature>.prd.json --plan 
 node <skill-dir>/modules/prd/scripts/prd.mjs render <feature>.prd.json --plan <feature>.tech-plan.json
 ```
 
-Apply a focused read-only SOLID/design critique using
-[specialist routing](modules/review/references/specialist-reviews.md) before presenting
-the plan; this is preparation, not an extra formal review round. Show the HTML, only
+For consequential design choices, apply a focused read-only critique using
+[specialist routing](modules/review/references/specialist-reviews.md); do not manufacture
+an architecture ceremony when no such choice exists. Show the HTML, only
 material unresolved decisions, and ask for **Gate B — Implementation plan approved**.
-That approval binds both sources and their task graph. Follow the
+That approval binds both source contracts and their task graph. Follow the
 [execution reference](modules/prd/references/execution.md) to record real user decisions
 and fingerprints in local run JSON. Never infer consent from silence or tool success.
 
@@ -98,17 +97,19 @@ Record runtime/manual routes where they provide the appropriate evidence.
 ## 4. Review and refactor the integrated feature
 
 After all CODE tasks are validated, integrate their results and verify their contracts.
-Run the [simplifier](references/simplifier.md) once on the combined change, then affected
-checks. Use [bundled review](modules/review/GUIDE.md) on one immutable cumulative feature
-diff. Route quality, SOLID, web and security to available standalone skills only when
-applicable; those skills remain independently usable and are not embedded here.
+Inspect cross-task simplification using the [simplifier guidance](references/simplifier.md).
+No useful refactor is a valid outcome; reuse still-valid checks on unchanged code. Use
+[bundled review](modules/review/GUIDE.md) on one immutable cumulative feature diff: one
+general reviewer, plus architecture, web or security specialists only where applicable.
+Standalone skills remain independently usable.
 
 Reviewers are read-only. A separate writer applies accepted fixes and useful refactors,
 including across task boundaries, while preserving approved behavior and task ownership.
 Map each correction back to its delivery patch. Validate the corrected result and review
 the fresh cumulative snapshot once more when needed. All specialists together count as
-one round: at most two feature review rounds, never two per task. Unresolved material
-findings or incomplete coverage block delivery and require a concrete user decision.
+one round. Two rounds may run autonomously; a further focused round requires explicit
+user authorization recorded with `authorize-review`, without resetting history. Unresolved
+material findings or decisive coverage gaps block delivery; do not force a clean verdict.
 
 ## 5. Deliver small changes and prepare acceptance
 
@@ -117,6 +118,8 @@ checkpoint or one authorized draft PR/MR per CODE task. Keep each actual base/he
 small and coherent. Use independent branches for independent slices and explicit stacked
 bases for real dependencies; a task PR must not contain the cumulative feature diff.
 Verify every delivery matches the reviewed result. Publication requires recorded authority.
+Every delivery-stage check must pass or have a specific human-accepted waiver; missing,
+failed or blocked checks otherwise prevent delivery. Post-delivery acceptance is separate.
 
 Record observed checks and delivery links, then re-render the same plan. Hand off actual
 behavior, checks, remaining risks and reproducible `human-qa` steps. Human QA is acceptance

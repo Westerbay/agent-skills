@@ -24,7 +24,8 @@ Required arrays (empty allowed except requirements):
   priority: "must" | "should" | "could", acceptance: string[]}`.
 - `tasks`: see the two task types below.
 - `checks`: `{id, requirementIds: string[], scenario, risk?: string,
-  route: "automated" | "runtime" | "manual", expected, seedIds: string[]}`.
+  route: "automated" | "runtime" | "manual", stage?: "delivery" | "acceptance",
+  expected, seedIds: string[]}`.
 - `seeds`: `{id, description, requirementIds: string[], setup, cleanup, safety}`.
 - `risks`: `{id, kind: "risk" | "assumption" | "question", description,
   mitigation?: string, status: "open" | "resolved", owner?: string}`.
@@ -32,6 +33,11 @@ Required arrays (empty allowed except requirements):
 Every implementation requirement needs a task and a check. Use observable acceptance
 criteria. Automated tests still pass the TDD test-value gate; runtime/manual evidence is
 valid. Seed commands must be deterministic, idempotent and guarded from production.
+Checks default to `stage: "delivery"` and must pass before any task delivery, unless the
+user explicitly accepts that exact limitation. Use `acceptance` only for post-delivery
+human acceptance; `route: "manual"` alone does not defer a check. Make the stage visible
+in the combined approval HTML and settle it before Gate B; do not reclassify a failed
+check to bypass the delivery guard.
 
 Common task fields: `{id, kind, title, dependsOn: string[], requirementIds: string[],
 planRefs: string[], seedIds: string[]}`. Dependencies reference task IDs in this PRD;
@@ -86,8 +92,14 @@ approval, binding both fingerprints and the task graph. Do not repeat design nar
 the implementation PRD or ask for a separate Gate C.
 
 Bump revision for a substantive source change; reopen the earliest affected approval gate.
-The execution fingerprint also detects edits that forgot to bump revision. Initialize a
-new run record and record only approvals still valid for this exact scope/plan revision.
+New runs use `fingerprintMode: "contract-v1"`: only document locale and root/requirement/
+task/entry titles are excluded from approval fingerprints. Titles are display labels;
+put behavior in descriptions, acceptance, bodies and other contract fields. Summaries,
+diagrams, scopes, checks and revisions remain binding, including edits without a revision
+bump. Presentation-only title/locale edits need a re-render, not new approvals. For a
+changed contract, initialize a new record and carry forward only approvals/evidence still
+valid for that exact revision; never edit hashes to preserve stale authority. Legacy v2
+records without this mode retain full-document fingerprint rules without silent migration.
 Existing HTML stays readable. Do not mass-convert historical Markdown or delete it; new
 and explicitly revised documents use JSON. Schema migrations are explicit, never lossy.
 Document schema stays at version 1. Execution records now use version 2; preserve old

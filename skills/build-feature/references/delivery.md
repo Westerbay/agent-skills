@@ -4,6 +4,10 @@ Choose `local` (default) or `review-request` at Gate A. Implementation approval 
 authorize publication. Existing explicit authority remains valid within its scope.
 All CODE tasks are implemented and the cumulative feature is reviewed before any task
 delivery. Keep one local checkpoint or one draft PR/MR per CODE task.
+Before `ready-to-deliver` and each task delivery, all delivery-stage checks must pass or
+have a current, specific human-accepted waiver recorded with `waive-check`. Missing,
+failed and blocked results otherwise stop delivery. Disclose accepted limitations;
+acceptance-stage checks and human QA occur after delivery and do not satisfy this guard.
 
 ## Make each change readable
 

@@ -12,7 +12,7 @@ After each answer:
 1. update confirmed requirements, assumptions, open questions, and out-of-scope items;
 2. identify contradictions with earlier answers or repository evidence;
 3. paraphrase any material interpretation before relying on it;
-4. ask the next smallest set of questions.
+4. ask again only if a material decision still needs an answer; otherwise move forward.
 
 Recommend an answer with rationale when the user wants guidance or when a tradeoff is
 non-obvious. Do not overwhelm the user with a fixed questionnaire.
@@ -54,7 +54,10 @@ relevant reuse and the CODE task graph. Include owned paths, true dependencies, 
 groups and small PR boundaries alongside concise acceptance/check routes. Keep decisions
 brief; omit irrelevant sections and repeated scope/architecture narrative.
 
-Ask once for approval of the exact technical and implementation source revisions together.
+Ask once for approval of the technical and implementation contracts/revisions together.
 This replaces the former separate B/C approvals. Implementation starts only after this
 combined Gate B and Gate A. A plan revision or changed task contract needs the affected
 approval renewed; a routine scoped implementation/refactor does not create a new gate.
+New runs exclude only titles and document locale from approval fingerprints; those
+presentation edits do not invalidate the approved behavior. See the
+[execution contract](../modules/prd/references/execution.md) for exact compatibility rules.

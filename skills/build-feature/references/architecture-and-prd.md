@@ -52,7 +52,7 @@ Decisions left only in conversation or an unlinked visual will not reach a task 
 Before Gate B, inspect representative task excerpts for this coverage. Do not add a
 separate design document or duplicate the plan to achieve it.
 
-Before presentation, apply a read-only SOLID critique through
+For consequential design choices, apply a focused read-only critique through
 [specialist routing](../modules/review/references/specialist-reviews.md), or use the
 [bundled modular design guide](../modules/development/references/modular-design.md).
 Check responsibility, dependencies and one actual extension/variation scenario. Resolve
@@ -103,5 +103,6 @@ invariants count, trivial getters/setters do not.
 Author both JSON sources using the [compact contract](../modules/prd/references/authoring.md).
 Render one combined HTML with logic/UML, concise acceptance requirements, task DAG and
 checks. Present the link and material open decisions; ask once for Gate B approval of
-that exact pair of sources. No separate Gate C. Source changes invalidate run fingerprints;
-reopen affected approvals for substantive changes rather than editing approved history.
+the source contracts and task graph. No separate Gate C. Reopen affected approvals for
+substantive changes; presentation-only title/locale edits in new contract-fingerprinted
+runs need only a re-render. Follow the document contract rather than editing run hashes.

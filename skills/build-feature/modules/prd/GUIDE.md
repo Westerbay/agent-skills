@@ -83,8 +83,10 @@ commands cannot execute HTML or load remote content.
 
 For build-feature, use [references/execution.md](references/execution.md). Preserve the
 approved source; record observed checks and task phases separately in `<feature>.run.json`.
-The CLI checks document fingerprints, references, dependencies and bounded review passes.
-It does not establish user consent or judge the truth of evidence. Copy only explicit
+The CLI checks contract fingerprints, dependencies, review allowances and delivery-check
+results. New runs permit title/locale presentation edits without invalidating approval;
+behavior changes remain binding. Waivers and additional review rounds require explicit
+human evidence. The CLI does not establish consent or judge evidence truth. Copy only explicit
 user decisions and actual observations into the record. Never execute JSON commands.
 
 Present the HTML path, key unresolved issues and any required approval. Agents consume

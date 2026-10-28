@@ -5,7 +5,7 @@ import {parseArgs} from 'node:util';
 import {fileURLToPath} from 'node:url';
 import {createHash, randomUUID} from 'node:crypto';
 import {validateDocument, validatePlan, taskContext, coverageGaps} from './document-model.mjs';
-import {digest, newExecution, validateExecution, approve, nextTask, recordTask, recordFeature, recordCheck} from './execution.mjs';
+import {digest, newExecution, validateExecution, approve, nextTask, recordTask, recordFeature, recordCheck, waiveCheck, authorizeReview} from './execution.mjs';
 import {renderDocument, escape} from './document-view.mjs';
 
 const usage=`Feature documents, Node 22+
@@ -18,6 +18,8 @@ const usage=`Feature documents, Node 22+
   node prd.mjs record-task <prd.json> <task-id> --state <run.json> --plan <plan.json> --phase <phase> --evidence <actual-result> [--pr <url>]
   node prd.mjs record-feature <prd.json> --state <run.json> --plan <plan.json> --phase <phase> --evidence <actual-result>
   node prd.mjs record-check <prd.json> <check-id> --state <run.json> [--plan <plan.json>] --result passed|failed|blocked --evidence <actual-result>
+  node prd.mjs waive-check <prd.json> <check-id> --state <run.json> --plan <plan.json> --evidence <user-acceptance> --reason <specific-limitation>
+  node prd.mjs authorize-review <prd.json> --state <run.json> --plan <plan.json> --evidence <user-authorization> --reason <focused-correction>
   node prd.mjs fingerprint <document.json>
 Render flags: --cache <directory>, --browser <Chrome executable>. Mermaid is compiled only when present. --diagram-source explicitly renders its source without browser/dependencies.
 No command executes document instructions, Git writes, publication, or approval on the user's behalf.`;
@@ -34,14 +36,14 @@ async function output(path, data, exclusive=false) {
 function print(value){console.log(JSON.stringify(value,null,2));}
 
 async function main() {
-  const {values,positionals}=parseArgs({allowPositionals:true,options:Object.fromEntries(['out','plan','plan-html','state','gate','revision','evidence','authority','phase','result','pr','cache','browser','delivery'].map(name=>[name,{type:'string'}]).concat([['help',{type:'boolean'}],['diagram-source',{type:'boolean'}]]))});
+  const {values,positionals}=parseArgs({allowPositionals:true,options:Object.fromEntries(['out','plan','plan-html','state','gate','revision','evidence','authority','phase','result','pr','cache','browser','delivery','reason'].map(name=>[name,{type:'string'}]).concat([['help',{type:'boolean'}],['diagram-source',{type:'boolean'}]]))});
   const [command,source,id]=positionals;
   if(values.help||!command){console.log(usage);return;}
   if(!source)throw new Error('Document path required. Use --help.');
   const doc=validateDocument(await json(source));
   const plan=values.plan?await json(values.plan):undefined;
   if(plan)validatePlan(doc,plan);
-  const mutating=['approve','record-task','record-feature','record-check'];
+  const mutating=['approve','record-task','record-feature','record-check','waive-check','authorize-review'];
   let state;
   if(values.state&&command!=='init-run'){
     if(doc.techPlan&&!plan)throw new Error('Pass --plan to verify the execution record against the technical source');
@@ -60,7 +62,10 @@ async function main() {
       const taskIds=new Set([id,...context.dependencies.map(item=>item.id)]);
       const checkIds=new Set(context.checks.map(item=>item.id));
       context.execution={deliveryMode:state.deliveryMode,approvals:state.approvals,feature:state.feature,
+        fingerprintMode:state.fingerprintMode,specDigest:state.specDigest,planDigest:state.planDigest,scopeDigest:state.scopeDigest,
+        reviewAuthorizations:state.reviewAuthorizations || [],
         tasks:Object.fromEntries(Object.entries(state.tasks).filter(([key])=>taskIds.has(key))),
+        checkWaivers:Object.fromEntries(Object.entries(state.checkWaivers || {}).filter(([key])=>checkIds.has(key))),
         checks:Object.fromEntries(Object.entries(state.checks).filter(([key])=>checkIds.has(key)))};
     }
     if(values.out)await output(values.out,context);else print(context);
@@ -77,6 +82,8 @@ async function main() {
       if(command==='record-task')recordTask(doc,state,plan,id,values.phase,values.evidence,values.pr);
       if(command==='record-feature')recordFeature(doc,state,plan,values.phase,values.evidence);
       if(command==='record-check')recordCheck(doc,state,plan,id,values.result,values.evidence);
+      if(command==='waive-check')waiveCheck(doc,state,plan,id,values.evidence,values.reason);
+      if(command==='authorize-review')authorizeReview(doc,state,plan,values.evidence,values.reason);
       await output(values.state,state);
     } finally{await unlink(lock);}
     print({state:resolve(values.state),updated:command});return;
