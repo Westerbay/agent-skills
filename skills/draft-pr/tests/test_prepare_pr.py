@@ -2,6 +2,7 @@ import importlib.util
 import sys
 from unittest.mock import patch
 import json
+import os
 from pathlib import Path
 import subprocess
 import tempfile
@@ -85,6 +86,93 @@ class PreparePRTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, 'template not found'):
                 helper.template_path(Path(directory) / 'missing.md')
 
+    def test_structured_render_does_not_discard_custom_template_content(self):
+        content = {'title': 'Fix export', 'description': 'Preserve export formatting.'}
+        for template in ['## Summary\n\n## Test plan\n',
+                         '## Description\n\nKeep this reviewer instruction.\n',
+                         '## Description\n\n## Checklist\n\n- [ ] Confirm compatibility\n']:
+            with self.subTest(template=template), self.assertRaisesRegex(ValueError, '--body-file'):
+                helper.render_body(content, template, {'ui': False})
+
+    def test_cli_utf8_and_authored_template_preserve_content_without_utf8_mode(self):
+        script = Path(helper.__file__).resolve()
+        with tempfile.TemporaryDirectory() as directory:
+            scratch = Path(directory)
+            repo = scratch / 'repo'
+            repo.mkdir()
+            def git(*args):
+                return subprocess.run(['git', '-C', str(repo), *args], check=True, capture_output=True).stdout
+            env = {**os.environ, 'PYTHONUTF8': '0', 'PYTHONIOENCODING': 'cp1252'}
+            def cli(*args):
+                return subprocess.run([sys.executable, str(script), *map(str, args)],
+                                      capture_output=True, encoding='utf-8', env=env, cwd=scratch)
+            git('init', '-b', 'main')
+            git('config', 'user.email', 'fixture@example.invalid')
+            git('config', 'user.name', 'Test fixture')
+            (repo / 'source.txt').write_bytes(b'base\n')
+            git('add', '.')
+            git('commit', '-m', 'base fixture')
+            git('checkout', '-b', 'feature')
+            (repo / 'source.txt').write_bytes('Café → 🙂\n'.encode('utf-8') + b'legacy byte: \xff\n')
+            git('add', '.')
+            git('commit', '-m', 'unicode fixture')
+            context_dir = scratch / 'context'
+            result = cli('collect', '--repo', repo, '--base', 'main', '--out', context_dir)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            expected_patch = git('diff', '--no-ext-diff', '--no-textconv', 'main...HEAD')
+            self.assertEqual((context_dir / 'diff.patch').read_bytes(), expected_patch)
+            context = context_dir / 'context.json'
+            content = scratch / 'content.json'
+            content.write_text(json.dumps({'title': 'Fix Unicode → 🙂', 'description': 'Préserver → 🙂.'},
+                                          ensure_ascii=False), encoding='utf-8')
+            body = scratch / 'résultat-🙂.md'
+            result = cli('render', '--context', context, '--content', content, '--out', body)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn('Préserver → 🙂.', body.read_text(encoding='utf-8'))
+            self.assertIn(str(body), result.stdout)
+            authored = scratch / 'authored.md'
+            authored_bytes = ('## Summary\r\n\r\nPréserver → 🙂.\r\n\r\n'
+                              '<!-- Keep the repository reviewer instructions. -->\r\n'
+                              '## Test plan\r\n\r\n- [ ] Confirm compatibility\r\n').encode('utf-8')
+            authored.write_bytes(authored_bytes)
+            result = cli('render', '--context', context, '--body-file', authored, '--out', body)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(body.read_bytes(), authored_bytes)
+            result = cli('preflight', '--context', context)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertTrue(json.loads(result.stdout)['ready'])
+
+    def test_planning_guard_distinguishes_deletion_from_head_or_index_content(self):
+        with tempfile.TemporaryDirectory() as directory:
+            repo = Path(directory)
+            def git(*args):
+                return subprocess.run(['git', '-C', directory, *args], check=True,
+                                      capture_output=True, encoding='utf-8').stdout
+            git('init', '-b', 'main')
+            git('config', 'user.email', 'fixture@example.invalid')
+            git('config', 'user.name', 'Test fixture')
+            (repo / 'removed.prd.json').write_text('{}', encoding='utf-8')
+            (repo / 'state.json').write_text('{"kind":"tech-plan"}', encoding='utf-8')
+            (repo / 'retained.prd.json').write_text('{}', encoding='utf-8')
+            git('add', '.')
+            git('commit', '-m', 'base fixture')
+            git('checkout', '-b', 'feature')
+            git('rm', '--', 'removed.prd.json', 'state.json')
+            (repo / 'retained.prd.json').write_text('{"changed":true}', encoding='utf-8')
+            git('add', '.')
+            git('commit', '-m', 'remove obsolete plans')
+            context, _ = helper.collect(repo, 'main')
+            self.assertEqual(context['planningFiles'], ['retained.prd.json'])
+            (repo / 'removed.prd.json').write_text('', encoding='utf-8')
+            git('add', 'removed.prd.json')
+            git('rm', '--', 'retained.prd.json')
+            context, _ = helper.collect(repo, 'main')
+            self.assertEqual(context['planningFiles'], ['removed.prd.json', 'retained.prd.json'])
+            # A staged removal cannot hide a planning file still present in committed HEAD.
+            git('commit', '-m', 'replace plan fixture')
+            context, _ = helper.collect(repo, 'main')
+            self.assertEqual(context['planningFiles'], ['removed.prd.json'])
+
     def test_cli_preparation_and_preflight_are_local_and_preserve_user_work(self):
         script = Path(helper.__file__).resolve()
         with tempfile.TemporaryDirectory() as directory:
@@ -128,6 +216,16 @@ class PreparePRTests(unittest.TestCase):
             result = cli('preflight', '--context', context)
             self.assertNotEqual(result.returncode, 0)
             self.assertIn('Planning documents would be published', result.stderr)
+            result = cli('preflight', '--context', context, '--allow-planning-file', 'local.prd.json')
+            self.assertEqual(result.returncode, 0, result.stderr)
+            result = cli('preflight', '--context', context, '--allow-planning-file', '*.prd.json')
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn('exact detected paths', result.stderr)
+            (repo / 'other.prd.json').write_text('{}')
+            git('add', 'other.prd.json')
+            result = cli('preflight', '--context', context, '--allow-planning-file', 'local.prd.json')
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn('other.prd.json', result.stderr)
             git('commit', '-m', 'planning fixture')
             result = cli('preflight', '--context', context)
             self.assertNotEqual(result.returncode, 0)
