@@ -29,11 +29,14 @@ In `build-feature`, assign each correction to its CODE owner and eventual task p
 Give shared-file changes one writer and recheck affected consumers across task boundaries.
 The frozen review covers the integrated feature; do not send each owner through a separate
 review loop. Complete corrections and affected/integrated validation before taking the
-next cumulative snapshot, within the two-round feature limit.
+next cumulative snapshot. Two feature rounds run autonomously; a further focused round
+requires actual user authorization recorded with `authorize-review`, without resetting
+history or ignoring unresolved findings.
 When repair exceeds the approved contract, retain the finding and required scope decision
 rather than presenting an unperformed redesign as a completed fix.
 
-For full review, apply the verifier reference to warnings/criticals. Preserve raw replies,
+For consequential or contested warnings/criticals, use the verifier when a second opinion
+adds useful confidence; security retains its required independent verification. Preserve raw replies,
 accepted corrections and reasons separately. A failed verifier retains findings as
 unverified; it cannot turn the result into a clean pass. For security, apply the
 [verifier evidence exception](verifier.md#security-evidence-exception): preserve the raw

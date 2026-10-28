@@ -1,105 +1,89 @@
-# Reviewer output contract
+# Reviewer output contract (v2)
 
-Single source of truth for the JSON every reviewer returns. **Self-contained** — does not reference any other skill. Each dispatched reviewer reads the §Compact schema from this file directly (the dispatch prompt carries this file's absolute path); the orchestrator validates replies against the §Full schema here.
+Every selected reviewer returns one JSON object, including on failure. Read only the
+assigned concerns from [dimensions](dimensions.md). The general reviewer covers quality,
+conventions, regression and logic; architecture, web and security are independently
+selected specialists. These skills remain usable outside this feature protocol.
 
-Every reviewer returns **one JSON object and nothing else** — no prose, no surrounding fences. The object is mandatory even on failure; prose-only output is a failure.
+## Reply shape
 
-## Compact schema (read by each dispatched reviewer)
-
-```
-Return exactly this JSON shape (no prose, no fences):
+```json
 {
-  "agent": "<your-section>-reviewer",
-  "version": "1.0.0",
-  "scope": { "mode": "branch|staged|remote-branch|local", "base": "<base>", "branch": "<branch>", "files": ["<changed file reviewed>"] },
-  "status": "ok|partial|error",
-  "coverage": "complete|partial|not-run",
-  "summary": { "critical": 0, "warning": 0, "nit": 0 },
-  "findings": [
-    {
-      "id": "<section>.<category>.<slug>",
-      "section": "<your-section>",
-      "severity": "critical|warning|nit",
-      "category": "<short category>",
-      "title": "<short normalized title>",
-      "file": "<repo-relative path>",
-      "line": 0,
-      "end_line": 0,
-      "related_files": [],
-      "evidence": "<one concrete sentence tied to file:line>",
-      "confidence": "high|medium|low",
-      "recommendation": "<one concrete next action>"
-    }
-  ],
+  "agent": "general-reviewer",
+  "version": "2.0.0",
+  "scope": {
+    "mode": "local",
+    "base": "<exact manifest base>",
+    "branch": "<exact manifest branch>",
+    "patchDigest": "<exact lowercase SHA-256 from manifest>",
+    "files": ["<reviewed repository-relative file>"]
+  },
+  "status": "ok",
+  "coverage": "complete",
+  "summary": {"critical": 0, "warning": 0, "nit": 0},
+  "findings": [],
   "notes": [],
   "errors": []
 }
-Rules: summary counts == findings split by severity, exactly. Omit line/end_line for file-level findings. Never use severity "nit" for the security section. No findings means status "ok" and coverage "complete" only when assigned checks completed without unresolved blockers. Otherwise use partial/error status and describe the gap; zero findings never proves complete coverage.
 ```
 
-## Full schema (orchestrator validation reference)
+- `agent`: `<reviewer>-reviewer`, matching the manifest selection (`general`,
+  `architecture`, `web`, `security`). Save one `<reviewer>.json` per selected reviewer.
+- `version`: `2.x.y`. Version 1 replies are rejected; do not invent a digest for an old
+  review. Read the current saved patch and return a fresh reply.
+- `scope`: exact manifest `mode`, `base`, `branch`, and `patchDigest`. The digest is required
+  even when branch names and files are unchanged. It binds the reply to this snapshot.
+- `files`: complete manifest file coverage for `ok`; a subset is allowed for `partial`.
+  Each reviewer assesses its concerns across the manifest, not only files with a familiar
+  extension. Record an unavailable binary or missing context as a coverage limit.
+- `status` / `coverage`: `ok` / `complete`, `partial` / `partial`, or `error` / `not-run`.
+  Zero findings means complete only when assigned checks finished without blockers.
+- `summary`: exact counts of findings by severity. `notes` and `errors` are string arrays;
+  errors are nonempty for partial/error and empty for ok.
 
-### Top-level fields
+Each finding has this shape (omit optional line fields for a file-level finding):
 
-| Field | Type | Required | Rule |
-|---|---|---|---|
-| `agent` | string | yes | e.g. `quality-reviewer` |
-| `version` | string | yes | Semver, start `"1.0.0"`; bump on schema change |
-| `scope.mode` | enum | yes | `branch` \| `staged` \| `remote-branch` \| `local` |
-| `scope.base` | string | yes | Exact manifest base (including empty when supplied for staged) |
-| `scope.branch` | string | yes | Exact manifest branch, also in staged mode |
-| `scope.files` | string[] | yes | Assigned manifest files (complete reply covers all; subset on partial) |
-| `status` | enum | yes | `ok` \| `partial` \| `error` |
-| `coverage` | enum | yes | `complete` \| `partial` \| `not-run` |
-| `summary` | object | yes | `{critical, warning, nit}` — must match `findings` |
-| `findings` | array | yes | May be empty |
-| `notes` | string[] | yes | Short context; may be empty |
-| `errors` | string[] | yes | Non-empty iff `status` is `partial`/`error` |
+```json
+{
+  "id": "logic.state-transition.missing-guard",
+  "section": "logic",
+  "severity": "warning",
+  "category": "state-transition",
+  "title": "<specific defect>",
+  "file": "<manifest file>",
+  "line": 1,
+  "end_line": 1,
+  "related_files": [],
+  "evidence": "<concrete observation and plausible impact>",
+  "confidence": "high",
+  "recommendation": "<smallest effective fix and validation>"
+}
+```
 
-### Finding fields
+IDs must be unique within the reply. Line numbers are positive integers, with end not
+before start. `confidence` is `high`, `medium` or `low`; uncertainty alone does not make
+a speculative claim a finding. Related files may support a finding anchored in the diff.
 
-| Field | Type | Required | Rule |
-|---|---|---|---|
-| `id` | string | yes | Stable, unique. `<section>.<category>.<slug>` |
-| `section` | enum | yes | `quality` \| `architecture` \| `regression` \| `security` \| `conventions` \| `logic` |
-| `severity` | enum | yes | `critical` \| `warning` \| `nit` |
-| `category` | string | yes | Agent-defined (e.g. `duplication`, `i18n`, `injection`, `signature-change`) |
-| `title` | string | yes | Short normalized title (used for dedupe) |
-| `file` | string | yes | Repo-relative path |
-| `line` | integer | no | Start line — omit for file-level findings |
-| `end_line` | integer | no | End line — omit if `line` omitted |
-| `related_files` | string[] | yes | Other cited files; empty for single-file |
-| `evidence` | string | yes | One concrete sentence tied to `file:line` |
-| `confidence` | enum | yes | `high` \| `medium` \| `low` |
-| `recommendation` | string | yes | One concrete next action |
+| Reviewer | Allowed finding sections |
+| --- | --- |
+| `general` | `quality`, `conventions`, `regression`, `logic` |
+| `architecture` | `architecture` |
+| `web` | `web` |
+| `security` | `security` |
 
-## Output rules
+Severity is `critical`, `warning` or `nit`, tied to real impact. Security never uses nit:
+follow [security evidence](security-audit-integration.md), keeping `needs_validation`
+unranked in notes, with partial coverage/errors when a decisive check is unavailable.
 
-For security evidence, follow [security-audit integration](security-audit-integration.md):
-`needs_validation` stays in unranked notes, with partial coverage and errors when decisive.
-Do not encode it as a ranked finding merely to fit this schema.
+## Validation and concise output
 
-- Always emit the JSON, even on failure.
-- Never omit required fields — use empty string / empty array.
-- `summary` counts equal the findings array split by severity, exactly.
-- No findings and no unresolved blockers after all assigned checks → `status: "ok"`, `coverage: "complete"`, zero counts and empty findings/errors. Otherwise report partial/error coverage with the exact blocker.
-- Partial review → `status: "partial"` + `coverage: "partial"` + `errors[]` explaining why.
-- Hard failure → `status: "error"` + `coverage: "not-run"` + `errors[]` with cause.
-- Security section never uses `severity: "nit"`.
-- `notes[]` entries are context, never findings: "could not verify" / "`<url>` — not rendered" / other unverified-gap items must not appear in `findings[]` nor inflate `summary` counts — the orchestrator will not post them as comments.
+The helper checks manifest/reply version, reviewer identity, exact patch digest and
+scope, allowed sections, file coverage, required fields and summary counts. Missing,
+malformed or stale replies cannot produce a clean complete report. Recollect evidence
+on a new snapshot after edits rather than modifying the old reply's digest.
 
-## Token budget
-
-Hard cap **3000 tokens** (JSON only). If exceeded: keep every `critical`/`warning` verbatim, collapse `nit` findings into a single `notes[]` entry, set `status: "partial"` and note the collapse in `errors[]`.
-
-## Orchestrator validation steps
-
-1. Parse the reply as JSON. If wrapped in fences/prose, strip the outer wrapper before parsing; if unparseable → reviewer failure.
-2. Verify all top-level fields present + enum values valid.
-3. Recount `findings` by severity, compare to `summary`. Mismatch → reviewer failure.
-4. Verify `section` on every finding equals the reviewer's assigned section.
-5. Verify `version` major matches this contract's major (`1`). Incompatible → surface as failure.
-
-On any validation failure: coerce `status` to `error`, populate `errors[]` with the reason, record under "Subagent failures" in the report.
-
-The local helper additionally validates snapshot scope, positive line ranges, required finding fields and complete assigned-file coverage. Missing or malformed replies remain failures; a clean-looking but incomplete run has verdict `incomplete`.
+Keep replies focused on actionable findings; consolidate low-value style notes. Do not
+truncate a consequential finding to fit a fixed token quota. If a host output limit
+prevents complete coverage, report partial/error with the exact missing scope. The
+coordinator may retry once or narrow the assignment explicitly; it must not claim the
+omitted material was reviewed.

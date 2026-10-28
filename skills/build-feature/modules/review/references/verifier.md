@@ -1,101 +1,69 @@
-# Adversarial verifier — refute findings before they reach the verdict
+# Verify consequential findings
 
-**Full mode only.** When available and permitted, the verifier is a second-opinion agent; otherwise it is an explicitly non-independent sequential pass whose job is the *opposite* of a reviewer's: it receives the `warning`/`critical` findings of ONE reviewer and tries to **refute** each of them. It exists because reviewers keep leaking three known false-positive clusters despite prompt rules: intent-stated refactor changes, temporary/placeholder data, and confirmation-seeking or unsourced claims. A finding that survives an adversarial read is worth posting; one that does not must never raise the verdict.
+Use a second opinion for consequential or contested warnings/criticals when it adds
+confidence. Security retains its companion's required independent verification. Do not
+launch a verifier for nits, a clean reply or every reviewer by default. Without an
+independent agent, disclose a sequential verification pass and its limits.
 
-**Pipeline, not barrier.** The orchestrator dispatches one verifier per reviewer **as soon as that reviewer's reply validates** — it never waits for the whole fan-out. Verification of a finding needs no cross-reviewer context. Only dedupe + verdict (which already wait for everyone) run after all verifiers return.
+The verifier reads the cited behavior, actual consumers, approved intent and relevant
+library contract from the same frozen snapshot. It actively looks for a concrete reason
+the claim is wrong; it does not assume every warning is real or dismiss one merely because
+confirmation is inconvenient. Generic uncertainty is not evidence of intentional behavior.
 
-## What gets verified
+## Assignment and result
 
-- Only `warning` and `critical` findings. Nits are never dispatched — they cannot raise the verdict.
-- The orchestrator applies the mechanical severity-inflation guard (coordinator-judgment.md) to the reviewer's reply **first**; findings it demotes to `nit` are not sent either.
-- A reviewer whose reply has zero remaining warnings/criticals gets **no verifier** — zero cost.
+Pass the manifest and saved patch paths, exact patch digest, original finding IDs and
+verbatim findings. Include inspected intent sources and approved design references;
+unavailable documents remain unavailable, not imagined approval. No source edits or
+new Git diff collection are permitted. Verification can proceed as reviewer replies
+arrive; aggregate after the selected coverage and needed verification are complete.
 
-## Verdicts and how the orchestrator applies them
+Return one JSON object:
 
-| Verdict | Meaning | Orchestrator action |
-|---|---|---|
-| `real` | Survives the adversarial read: concrete defect, evidence holds, not explained by the PR's stated intent | Keep finding + severity unchanged |
-| `intentional` | The flagged change matches the PR's stated intent / is placeholder-seed-temp data, and no unhandled consequence is shown | **Drop** from findings; count under "filtered by verifier" in the report |
-| `unsourced` | Evidence reduces to confirmation-seeking, a speculative edge-case with no plausible real input, or an uncited third-party-lib behavior claim | Move to nonblocking notes or a `nit` question; security concerns become investigation notes, never nits |
-
-**Tie-breaking is adversarial:** when genuinely uncertain whether a finding is real, the verifier must choose `intentional` or `unsourced` — the cost of a posted false positive (human dismissal, reverted "slop feedback") exceeds the cost of a demoted maybe.
-
-**Fail-open on verifier failure (non-security dimensions only):** if the verifier errors or returns an invalid reply after one retry, the orchestrator keeps that reviewer's findings **unchanged** (as if all `real`) and notes "unverified" in the report. The verifier is a false-positive filter — its failure must never delete a potentially real bug. Same rule per-finding: an id missing from `verdicts[]` is treated as `real`.
-
-### Security evidence exception
-
-For security findings, follow [security-audit integration](security-audit-integration.md).
-A verifier error, invalid reply or missing verdict cannot establish confirmation. Preserve
-raw candidates and their evidence, but keep candidates lacking required verification as
-unranked investigation notes with partial status/coverage and exact errors until resolved.
-Do not default them to `real`, demote them to `nit`, or imply full audit completion.
-Apply this exception to every retry/default rule below; other dimensions retain their
-existing behavior. Only verified security results re-enter ranked findings.
-
-## Dispatch envelope
-
-```
-You are an adversarial finding verifier for a PR review. Your job is to REFUTE
-the findings below, not to confirm them. When uncertain, refute.
-
-FIRST, read these files:
-1. <SKILL_DIR>/references/verifier.md §Verdicts — your complete methodology and output shape.
-2. <ARGUS_TMP>/diff.patch — the authoritative diff. Do NOT re-run git diff. Read
-   only the hunks relevant to the findings below; open repo files only for
-   context outside the patch window.
-
-Scope:
-- Repository (absolute path): <path>
-- Base: <base-branch>  Branch: <branch-name>
-- Reviewer section under verification: <section>
-
-Intent sources (AUTHORITATIVE for judging "intentional" — do not invent intent):
-- PR title + description: <inspected review-request text, or "none">
-- Linked PRD / issue or business document content: <or "none">
-- Mockup / screenshot spec: <compact spec, "<url> — not rendered", or "none">
-- Commit messages: <git log base..branch subjects+bodies>
-
-Findings to verify (JSON, verbatim from the reviewer):
-<the reviewer's warning/critical findings array>
-
-For EACH finding, actively try to kill it:
-- Does the PR's stated intent explain the change? An intent-stated contract /
-  signature / env-shape change with no broken consumer shown → "intentional".
-- Is the flagged data placeholder / seed / temp / mock? → "intentional".
-- Does the evidence reduce to "confirm this is intended" or "verify with
-  design/author" — no concrete defect pointed at? → "unsourced".
-- Is it a speculative edge-case with no plausible real input in this product's
-  domain? → "unsourced".
-- Does the proof rest on a third-party lib's runtime behavior with no doc
-  citation in the finding? Check the lib's current docs (available official documentation tools); if the
-  docs contradict the claim or you cannot confirm it → "unsourced".
-- Otherwise, re-read the cited file:line in the patch: does the defect
-  concretely exist as described? Only then → "real".
-
-Return ONE JSON object and nothing else:
+```json
 {
   "agent": "verifier",
-  "version": "1.0.0",
-  "section": "<section under verification>",
+  "version": "2.0.0",
+  "patchDigest": "<exact manifest digest>",
+  "reviewer": "<reviewer under verification>",
   "verdicts": [
-    { "id": "<finding id, verbatim>", "verdict": "real|intentional|unsourced",
-      "reason": "<one concrete sentence: what refuted it, or why it survives>" }
+    {"id": "<original finding ID>", "verdict": "real", "reason": "<concrete evidence>"}
   ],
   "errors": []
 }
-Rules: one verdict per finding id, ids verbatim, no extra ids. Token budget
-1500 tokens (JSON only).
 ```
 
-`<SKILL_DIR>` / `<ARGUS_TMP>` — same literal-absolute-path rule as every other dispatch (subagents inherit no env).
+One verdict per supplied ID; no invented IDs. Allowed verdicts:
 
-## Orchestrator validation
+- `real`: the demonstrated defect and plausible consequence survive examination.
+- `intentional`: inspected approved intent explains the change, with no unhandled
+  consumer or consequence. Drop it from findings while preserving evidence and reason.
+- `unsourced`: the claim rests on speculation or an unsupported library/deployment fact.
+  Keep an unranked note and any unresolved coverage gap; do not present it as a defect.
 
-1. Parse JSON (strip accidental fences). Unparseable → retry once with the standard "JSON only" nudge → non-security fail-open; for security apply the evidence exception.
-2. `verdicts[].id` must each match a dispatched finding id; unknown ids are ignored, missing ids default to `real` only outside security; for security apply the evidence exception.
-3. `verdict` enum valid; invalid value on an entry → that entry defaults to `real` only outside security; for security apply the evidence exception.
-4. Apply actions (keep / drop / demote) to the reviewer's findings **before** they enter aggregation. Recompute the reviewer's `summary` counts after application.
+Verify third-party behavior against the installed version's source or official docs.
+Seed/mock data is not a defect by itself, but inspect genuine production leakage before
+calling it intentional. A deliberate contract change can still break an overlooked caller.
 
-## Report surface
+## Validation and failure handling
 
-The report lists, per section: `filtered by verifier: N intentional dropped, M demoted to nit` (omit the line when zero). Dropped findings never appear in findings tables nor on the PR; demoted ones appear as nits. A fail-open ("unverified") section is flagged in the report header notes.
+The coordinator validates JSON, v2 version, exact patch digest, reviewer, IDs and verdicts
+before applying results. The aggregation helper does not ingest verifier replies directly.
+Retry invalid replies once on the unchanged snapshot. Reject stale replies rather than
+rewriting their digest. Preserve raw review and verification evidence separately, then
+recompute counts in the adjudicated reviewer reply.
+
+Outside security, a verifier error or missing verdict must not delete a supported finding:
+retain it as **unverified**, with the reason, rather than pretending verification succeeded.
+The coordinator still judges its evidence and impact before delivery.
+
+### Security evidence exception
+
+Follow [security-audit integration](security-audit-integration.md). A verifier failure,
+missing verdict or inaccessible decisive fact cannot establish security confirmation.
+Preserve the candidate, but keep it as an unranked investigation note with partial
+coverage/errors until required verification succeeds. Never default it to `real`, demote
+it to nit or convert the missing check into a clean report.
+
+Report accepted, refuted and unverified findings with concise reasons. Missing verification
+is a visible limit, not permission to publish comments or weaken delivery requirements.

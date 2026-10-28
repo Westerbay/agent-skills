@@ -1,114 +1,98 @@
-# Bundled Argus review
+# Bundled feature review
 
-Read-only, evidence-based review with deterministic preparation and aggregation. No
-provider CLI, installed review skill, model choice, or external posting is required.
+Review the exact cumulative change read-only, then route supported fixes to authorized
+writers. This module works locally without another skill, hosting provider or agent API.
 Resolve `<review-dir>` as `<skill-dir>/modules/review`.
 
-In `build-feature`, run this checkpoint once on the cumulative feature after every CODE
-task is validated and the integrated simplification and checks have finished, before any
-task delivery. Corrections may require one fresh review round: at most two rounds for
-the feature, not two per task or specialist. A standalone invocation reviews its requested
-scope without requiring the feature lifecycle.
+In `build-feature`, review after all CODE work is integrated and checked, before delivery.
+Inspect cross-task simplification opportunities first; no useful refactor is a valid
+outcome, and unchanged snapshots can reuse relevant passing checks. Do not repeat a
+formal review after each CODE task. A standalone review covers only its requested scope.
 
-Light review covers quality, conventions, regression, and logic. Full adds architecture
-and security, with an adversarial check of warnings/criticals. Select skills and mode with
-[specialist routing](references/specialist-reviews.md) before preparing the manifest.
-Use full when SOLID/module boundaries or security need their owning dimension, including
-auth, payments, consequential architecture changes, or unresolved integration risk.
-Web and code-quality checks fit within light review unless those wider concerns apply.
+## Select reviewers by risk
 
-## Prepare the exact scope
+Use one **general** reviewer for quality, conventions, regression and logic. Add only the
+specialists needed by the actual change: **architecture**, **web**, **security**. An
+architecture review does not require a security review, and a `.tsx` filename alone does
+not establish web impact. Follow [specialist routing](references/specialist-reviews.md)
+for triggering evidence, installed skills and disclosed bundled fallbacks.
 
-For committed changes with an explicitly resolved base:
+## Prepare an immutable snapshot
+
+For a committed change with an explicitly resolved base:
 
 ```sh
 python3 <review-dir>/scripts/argus_tools.py prepare --repo <repo> --base <base> --branch <branch> --out <new-run-dir>
 ```
 
-The helper also supports `--staged` and `--full`; pass `--full` for the selected full
-review, rather than adding architecture/security replies to a light manifest. It writes
-no Git state and performs no external actions. Do not stage or commit just to run it.
-Inspect manifest errors and excluded generated/lock/snapshot files; inspect excluded
-material separately when it could affect behavior, migrations, dependencies, or security.
+The default is `general`. Add, for example, `--reviewers general,architecture` or
+`--reviewers general,web,security` for the selected concerns. `--full` explicitly selects
+all four reviewers and cannot be combined with `--reviewers`; it is not the normal path.
+`--staged` reviews staged changes. No command stages, commits or publishes source.
+Inspect preparation errors and excluded generated/lock/snapshot material separately when
+it affects contracts, migrations, dependencies or security.
 
-For local, uncommitted delivery, the committed/staged helper does **not** cover the scope.
-Use its saved before/after checkpoint, record the exact file list and hashes, and
-review both added and deleted content. Produce scoped patches from those copies with
-`git diff --no-index -- <before> <after>` where useful (exit 1 means differences; higher
-codes mean errors). Include untracked/new files explicitly. In `build-feature`, use the
-saved feature baseline and integrated result, including every CODE task and cross-task
-refactor. Exclude pre-existing user edits; retain task ownership alongside the cumulative
-patch for the later task deliveries. Do not substitute isolated task diffs for this review.
+For uncommitted work, the committed/staged helper does not capture the complete scope.
+Use exact before/after copies or patches, including untracked, deleted and binary files,
+with per-file hashes and CODE ownership. Exclude unrelated edits and local planning
+artifacts. `git diff --no-index -- <before> <after>` can produce local patches (exit 1
+means differences; higher codes are errors). Do not substitute individual task diffs for
+the cumulative feature review.
 
-For local aggregation, create `manifest.json` with `mode: "local"`, `base` naming the saved
-baseline, `branch` naming the saved result, repo-relative `files`, the selected `reviewers`
-array, and `patchDigest` as SHA-256 of the saved concatenated scoped patch bytes. Retain the
-snapshot paths and per-file hashes alongside it. If a binary change cannot be meaningfully
-reviewed, report partial coverage; do not pretend an empty text patch proves correctness.
-Use the same saved baseline/result labels in every reply. Do not use `anchors` for local
-snapshots: it expects real Git review-request hunks.
+For local aggregation, create `manifest.json` with `schemaVersion: 2`, `mode: "local"`,
+`base` and `branch` naming the saved baseline/result, repo-relative `files`, selected
+`reviewers` (including `general`), and `patchDigest`: the lowercase SHA-256 of the saved
+concatenated patch bytes. Keep snapshot paths and hashes beside it. If binary content
+cannot be assessed, report the coverage gap. `anchors` expects real Git diff hunks.
 
-Use a new run directory and reply directory for each changed result. Local result labels
-must uniquely identify the round/snapshot, for example a feature ID plus round and digest;
-branch reviews should pass resolved immutable commit refs. Record the staged patch
-digest and relevant file hashes when using `--staged`. The helper does not bind a reply
-to its patch digest: the coordinator must keep readers on the frozen source, reject old
-replies after any change, and compare actual result hashes/digest before delivery.
-Do not run implementation or simplifier writers while reviewers/verifiers inspect it.
+Use a new directory for every changed snapshot. Pause writers during capture and review;
+reviewers may inspect relevant consumers from that same revision. The helper requires
+v2 replies carrying the exact `scope.patchDigest`, and rejects missing or stale digests.
+It does not prove that an agent read the patch; the coordinator still checks evidence
+and compares final content with the reviewed snapshot before delivery. Old v1 manifests
+and replies remain historical records; prepare fresh v2 evidence rather than relabeling
+them or inventing a missing digest.
 
-## Specialist routing
+## Dispatch and aggregate
 
-Use [specialist routing](references/specialist-reviews.md) to select the available quality,
-SOLID, web, and security skills from the actual scope. Record selected skills, resolved
-paths, triggering evidence, and unavailable/not-applicable checks alongside the manifest;
-no new reviewer dimensions or schema fields are required. Discover and read each selected
-skill's actual instructions. For security, retain the separate
-[security adapter](references/security-audit-integration.md) and its mode, sandbox, and
-evidence requirements. Internal full review does not authorize a complete security audit.
+Read [dimensions](references/dimensions.md) and [reply contract](references/contract.md).
+Give each selected reviewer absolute paths to the snapshot, manifest, applicable
+instructions, approved scope/UML/design references and assigned concerns. Include the
+resolved specialist skill path when used and an explicit read-only assignment. General
+implementation authority does not make a reviewer a writer. Security assignments also
+include the mode and capabilities from the [security adapter](references/security-audit-integration.md).
 
-## Execute the review
-
-Read [dimensions](references/dimensions.md) and [contract](references/contract.md). With
-available and permitted subagents, assign a separate read-only reviewer to each dimension;
-parallel readers are allowed. Give absolute paths to the checkpoint/patch, manifest,
-contract, assigned dimension, repository instructions and approved scope context. Also
-pass selected skill paths, relevant concerns, and the adapter's explicit read-only
-envelope; never dispatch a standalone skill's default review-and-refactor prompt during
-this pass. Each dimension owner incorporates its applicable specialist checks into one
-reply. For security, also pass the selected audit mode and security adapter. Disclose
-fallback criteria when a specialist is unavailable.
-Queue dimensions when concurrency is limited; do not silently omit them.
-
-Without subagents, execute the same dimensions in separate sequential passes yourself.
-Save one JSON reply per dimension as `<section>.json`, using the same contract. State
-clearly that this is a single-agent review with no independent verification. The helper's
-confidence label measures coverage only; it does not establish reviewer independence.
+Use independent agents when available and permitted, queueing work if needed. Otherwise
+perform distinct sequential passes and disclose the lack of independence. Save one v2
+reply per reviewer as `general.json`, `architecture.json`, `web.json` or `security.json`.
+Do not silently omit a selected concern or dispatch four agents for general's four topics.
 
 ```sh
 python3 <review-dir>/scripts/argus_tools.py aggregate --manifest <run-dir>/manifest.json --replies <reply-dir> --out <run-dir>/report.json
 ```
 
-Retry malformed, missing or failed replies once. Incomplete coverage stays visible and
-blocks the review checkpoint until resolved or explicitly accepted with its limitation.
-The helper validates scope, coverage, counts and exact deduplication, not semantic truth.
+Retry malformed or missing replies once on the unchanged snapshot. Unresolved partial
+coverage remains visible and blocks the checkpoint unless explicitly accepted with its
+limitation. The helper validates identity, scope, counts and exact duplicates, not the
+semantic truth of a finding. Coverage confidence is not reviewer independence.
 
-## Triage and report
+## Triage, correct and finish
 
-Use [coordinator judgment](references/coordinator-judgment.md). Preserve original replies
-and reasons for corrections. In full mode use [verifier](references/verifier.md) for
-warnings/criticals, never nits. If an independent verifier is unavailable, perform the
-pass sequentially and label it non-independent. Failed verification never silently removes
-a finding. Reaggregate accepted corrections separately from originals.
+Apply [coordinator judgment](references/coordinator-judgment.md) to cited code and impact,
+consolidating root causes. Use the [verifier](references/verifier.md) for consequential or
+contested warnings/criticals when a second opinion is useful; security retains its own
+required independent verification. No extra verifier is needed for nits or a clean reply.
+Preserve raw evidence and reasons for rejected findings.
 
-Critical => blocking; warning => needs-attention; missing/partial coverage => incomplete;
-otherwise pass. Include concrete file/line evidence, impact, suggested fix, checked scope,
-unverified areas and the independence limit. See [report format](references/report-format.md).
+Critical findings block; warnings need attention; missing/partial coverage is incomplete.
+Report scope, concrete findings, observed checks and limits using [report format](references/report-format.md).
+Writers apply accepted fixes separately, run affected checks and capture a fresh snapshot.
+All selected reviewers together count as one feature round. Two rounds may run
+autonomously; a further targeted round requires actual user authorization recorded with
+`prd.mjs authorize-review --evidence <user-reference> --reason <remaining-finding-or-scope>`
+against the current run. It grants one additional round without resetting history.
+Never force delivery or silently restart the run to bypass an unresolved finding.
 
-Return findings to the implementation coordinator; do not fix during the read-only pass.
-Accepted findings enter the [focused correction pass](../../references/implementation-orchestration.md#correct-accepted-findings).
-Review a fresh saved result after corrections; an earlier report cannot approve later edits.
-For a feature, aggregate all selected dimensions into one round, then return accepted
-findings to their CODE owners. Do not restart review separately for each task delivery or
-add another integrated-review ceremony after this cumulative checkpoint.
-No posting is part of this module. The `anchors` helper is an optional local classification
-utility; its suggested event is not authorization to comment, approve or request changes.
+This module posts no comments or approvals. `anchors` only classifies possible comment
+locations; its suggested event is not permission to post. Each task delivery references
+its relevant evidence from the integrated review rather than starting another ceremony.
