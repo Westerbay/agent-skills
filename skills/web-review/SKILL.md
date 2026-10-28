@@ -14,6 +14,12 @@ This skill is standalone. Use available local Git, project commands, and browser
 it requires no other skill, hosting account, tracker, or external audit service. Resolve
 reference links relative to this directory. Follow repository and framework conventions.
 
+Use the user's current conversation language for questions, findings, review reports
+and refactor summaries unless they explicitly request another output language. English
+source or examples do not select the response language. Preserve exact identifiers,
+schema keys/enums, paths, commands and quoted evidence. Pass the chosen language to
+delegated reviewers. The product's UI locale remains its own approved requirement.
+
 ## Scope and authority
 
 - For a review-only request, inspect and report without modifying source. Include

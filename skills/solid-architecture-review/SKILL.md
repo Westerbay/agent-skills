@@ -11,7 +11,13 @@ interfaces, design patterns, layers, or files it contains.
 
 This skill is standalone and works with local source, Git, and available repository
 checks. No other skill, service, or agent framework is required. Resolve bundled paths
-relative to this directory. Follow the repository's language and framework conventions.
+relative to this directory. Follow the repository's programming-language and framework conventions.
+
+Use the user's current conversation language for questions, findings, review reports
+and refactor summaries unless they explicitly request another output language. English
+source or examples do not select the response language. Preserve exact identifiers,
+schema keys/enums, paths, commands and quoted evidence. Pass the chosen language to
+delegated reviewers.
 
 ## Establish scope and authority
 

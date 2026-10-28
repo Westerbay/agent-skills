@@ -4,6 +4,13 @@ Deliver the smallest maintainable change that fits the repository and can be mea
 exercised. Keep names, responsibilities and extension boundaries clear while implementing;
 apply useful in-scope refactors instead of leaving problems for a later review.
 
+Use the user's current conversation language for questions, plans, explanations, review
+findings and delivery summaries unless they explicitly request another output language.
+English instructions, examples and source code do not select that language. Pass it to
+delegated agents. Preserve exact identifiers, commands, paths and quoted evidence, the
+required English Git names, and explicit language requirements for edited repository
+artifacts or product UI; those requirements do not change chat or local plan language.
+
 ## Scope and authority
 
 This workflow needs only local repository tools. Resolve references relative to this

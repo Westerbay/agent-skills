@@ -4,6 +4,10 @@ Author content once as JSON; present only the generated HTML to the user. Keep s
 JSON, execution records and generated planning documents local unless publication was
 explicitly requested. Never hand-write HTML or create a parallel `.prd.md`.
 
+Author the plan in the user's conversation language, not the language of the bundled
+examples. Follow the [language and locale contract](references/authoring.md) for both
+JSON sources, rendered HTML and task handoffs; an explicit output-language request wins.
+
 ## Before drafting
 
 Inspect the repository before asking for facts. Use the bundled [reuse scouting](../../references/reuse-scouting.md).

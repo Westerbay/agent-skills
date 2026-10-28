@@ -10,6 +10,12 @@ through focused refactoring when authorized; do not substitute a style checklist
 reasoning about behavior. This is a standalone skill with bundled references and no
 required provider, external service, other skill, or feature-planning workflow.
 
+Use the user's current conversation language for questions, findings, review reports
+and refactor summaries unless they explicitly request another output language. English
+source or examples do not select the response language. Preserve exact identifiers,
+schema keys/enums, paths, commands and quoted evidence. Pass the chosen language to
+delegated reviewers.
+
 ## Scope and authority
 
 - A request for review, explanation, or recommendations alone is read-only. Return

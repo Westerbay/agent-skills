@@ -40,6 +40,8 @@ but cannot discover an unlinked mockup or a UX decision left only in chat. Suppl
   their actual code/checkpoint locations;
 - repository instructions, the absolute [development guide](../modules/development/GUIDE.md)
   path, relevant references, checks and safe fixture responsibilities;
+- the user's conversation/output language for explanations, findings and handoffs,
+  plus explicit artifact-language exceptions; keep identifiers and English Git names;
 - an explicit boundary: no unrelated cleanup, publication or out-of-scope writes;
 - a return contract: attributable patch, changed files, acceptance/plan IDs mapped to
   behavior/check evidence, deviations and unverified areas.

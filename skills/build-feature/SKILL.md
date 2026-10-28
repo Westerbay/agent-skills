@@ -6,8 +6,16 @@ description: Orchestrate a substantial feature through scope approval, one conci
 # Build Feature
 
 Turn a feature idea into an approved, implemented, reviewed change. Keep the current
-phase, decisions and actual approvals explicit across turns. Use the user's language in
-conversation and the repository's language for artifacts.
+phase, decisions and actual approvals explicit across turns.
+
+Use the user's current conversation language for questions, progress, scope proposals,
+PRDs, implementation plans, UML labels/explanations, reviews and handoffs unless the user
+explicitly requests another output language. English skill instructions, examples or
+repository code do not select the output language. Preserve code identifiers, schema
+keys/enums, commands, paths and quoted evidence; keep the required English Git names.
+Honor an explicit language requirement for a particular repository artifact without
+applying it to local planning documents or chat. Pass the chosen language and these
+exceptions to every writer, reviewer and other delegated agent.
 
 ## Runtime and approvals
 

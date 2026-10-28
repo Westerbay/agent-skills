@@ -6,6 +6,12 @@ its static instructions and checklists, then use `render --body-file <authored.m
 That route preserves text without structural rewriting or checking its claims; inspect
 the body against the captured diff and actual evidence before publication.
 
+Write editable prose in the user's conversation language, following the entrypoint's
+explicit-language and repository exceptions. Keep the Conventional PR title in English
+and JSON keys/status values unchanged. This structured renderer uses English section
+labels; for localized headings, translate the bundled template and use `--body-file`.
+Preserve any required custom-template headings, static instructions and checklist structure.
+
 Required `title` (one line) and `description` (concrete resulting behavior). Optional:
 - `changes`: Added/Changed/Removed/Fixed string arrays.
 - `related`: informational Markdown links or `Related to #123`; no auto-closing keywords.

@@ -27,6 +27,10 @@ data protection, or quality expectations. Follow the host agent's instruction hi
 ## Communication
 
 - Communicate in the user's language, clearly and concisely.
+- Use that language for generated plans, PRDs, reviews and handoffs unless the user
+  requests another language. Pass it to delegated agents. Repository code and English
+  skill instructions do not select the output language; preserve technical identifiers
+  and explicit artifact-language requirements, including English Git naming.
 - Use full clarity for security warnings, irreversible-action confirmation, and
   multi-step instructions where compression could create ambiguity.
 - Do not apply a compressed conversational style to code, commits, PR/MR descriptions,
@@ -126,8 +130,10 @@ data protection, or quality expectations. Follow the host agent's instruction hi
 # Repository conventions
 
 - Maintain this checkout as the source of truth for distributed skills.
-- Write instructions, metadata, examples, documentation and commit messages in English.
-  Preserve runtime localization and follow the user's language in conversation.
+- Maintain distributed skill instructions, metadata, shipped examples, repository
+  documentation and commit messages in English. This does not set the language of
+  generated plans, reviews or PR descriptions; those follow the user's conversation.
+  Preserve runtime localization and the required English Conventional PR titles.
 - Use Conventional Commits: `type(scope): summary`. Keep the summary concise and
   describe the resulting change. Follow the existing skill names for scopes when useful.
 - Name agent-created branches `<type>/<short-english-kebab-case-description>`, using
