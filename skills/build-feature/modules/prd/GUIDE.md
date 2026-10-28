@@ -23,10 +23,11 @@ implementation plan presents technical logic/UML first, then requirements and th
 Resolve `<prd-skill>` as `<skill-dir>/modules/prd`; paths below are relative to this module.
 Node 22+ is required. The checked-in assets support validation and PRD rendering without
 installing packages. SVG diagram compilation and rebuilding assets additionally require
-`npm ci --ignore-scripts` in this skill directory and Chrome (`--browser` overrides it).
+Node 22.12+ and `npm ci --ignore-scripts` in this skill directory, plus Chrome
+(`--browser` overrides it).
 Dependencies are pinned in package-lock.json. Never run `npx latest` per document.
 
-Before rendering a document containing Mermaid, verify Node 22+, the module's local
+Before rendering a document containing Mermaid, verify Node 22.12+, the module's local
 `playwright-core` dependency, and an available Chrome executable. Install the locked
 dependencies once in this module, or in a persistent writable copy of the complete
 module when the installed skill is read-only. Reuse that runtime for subsequent documents;

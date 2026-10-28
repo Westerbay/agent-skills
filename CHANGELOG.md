@@ -76,6 +76,12 @@
 - Explain locked dependency setup when SVG compilation cannot load `playwright-core`,
   preserving any previously rendered HTML.
 
+- Update Mermaid and its vulnerable transitive dependencies, rebuild the offline bundle
+  and refresh third-party notices. Verify SVG diagrams, formulas and PNG copying through
+  a portable optional browser test; document the Node 22.12+ diagram-runtime requirement.
+- Normalize embedded script newlines before CSP hashing so Windows CRLF checkouts retain
+  working reader controls without weakening the script policy.
+
 ## 0.2.0 — 2026-09-27
 
 - Publish portable AGENTS.md instructions alongside repository conventions.
