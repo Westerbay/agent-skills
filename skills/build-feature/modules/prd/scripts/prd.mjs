@@ -52,8 +52,10 @@ async function main() {
   if(command==='fingerprint'){console.log(digest(doc));return;}
   if(command==='task-context'){
     const context=taskContext(doc,id,plan);
-    context.sourceFiles={prd:resolve(source),...(values.plan?{technicalPlan:resolve(values.plan)}:{})};
+    context.sourceFiles={prd:resolve(source),...(values.plan?{technicalPlan:resolve(values.plan)}:{}),
+      ...(values.state?{execution:resolve(values.state)}:{})};
     context.specDigest=digest(doc);
+    if(plan)context.planDigest=digest(plan);
     if(state) {
       const taskIds=new Set([id,...context.dependencies.map(item=>item.id)]);
       const checkIds=new Set(context.checks.map(item=>item.id));

@@ -78,6 +78,14 @@ Before editing:
 For non-trivial work, give a short plan covering change, validation, and material risks.
 Re-plan when evidence invalidates it.
 
+When implementing a delegated task from an approved plan, read the supplied task context
+and its referenced UML, schemas and UX/UI artifacts before editing. Verify that they are
+accessible and match the assigned revision; do not assume inherited chat context. Treat
+approved behavior and design decisions as the contract, while retaining freedom over
+unconstrained implementation details. Resolve missing or conflicting inputs with the
+coordinator and report deviations instead of silently redesigning. Return evidence of
+conformance with the relevant acceptance/plan IDs, not only a list of passing tests.
+
 ## 2. Work in vertical behavior slices
 
 - Implement one observable behavior at a time.

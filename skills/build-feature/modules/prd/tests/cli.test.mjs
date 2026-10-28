@@ -5,6 +5,7 @@ import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {execFileSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
+import {digest} from '../scripts/execution.mjs';
 
 test('a portable runtime renders offline without npm and escapes embedded JSON', async()=>{
   const dir=await mkdtemp(join(tmpdir(),'feature-doc-runtime-'));
@@ -67,6 +68,41 @@ test('technical plan has an explicit offline diagram-source fallback',async()=>{
       assert.ok(html.includes(label),`Missing ${locale} diagram fallback label`);
       assert.ok(html.includes(`lang="${locale}"`));
     }
+  }finally{await rm(dir,{recursive:true,force:true});}
+});
+
+test('worker context identifies approved sources and refuses an edited plan without a revision bump',async()=>{
+  const dir=await mkdtemp(join(tmpdir(),'feature-doc-context-'));
+  const root=fileURLToPath(new URL('../',import.meta.url));
+  const source=join(dir,'reader.prd.json'),planPath=join(dir,'reader.tech-plan.json');
+  const state=join(dir,'run.json'),out=join(dir,'context.json');
+  const cli=(command,...args)=>JSON.parse(execFileSync(process.execPath,[join(root,'scripts/prd.mjs'),command,
+    source,'--plan',planPath,'--state',state,...args],{encoding:'utf8',stdio:'pipe'}));
+  try {
+    await cp(join(root,'examples/reader.prd.json'),source);
+    await cp(join(root,'examples/reader.tech-plan.json'),planPath);
+    const doc=JSON.parse(await readFile(source,'utf8'));
+    const plan=JSON.parse(await readFile(planPath,'utf8'));
+    const taskId=doc.tasks.find(item=>item.kind==='code').id;
+    const planning=JSON.parse(execFileSync(process.execPath,[join(root,'scripts/prd.mjs'),'task-context',
+      source,taskId,'--plan',planPath],{encoding:'utf8',stdio:'pipe'}));
+    assert.equal(Object.hasOwn(planning,'execution'),false);
+    assert.equal(Object.hasOwn(planning.sourceFiles,'execution'),false);
+    assert.equal(planning.planDigest,digest(plan));
+    cli('init-run');
+    for(const gate of ['A','B']) cli('approve','--gate',gate,'--revision',doc.revision,'--evidence','Synthetic user approval');
+    cli('record-task',taskId,'--phase','started','--evidence','Synthetic owned scope claim');
+    const context=cli('task-context',taskId);
+    assert.deepEqual(context.sourceFiles,{prd:source,technicalPlan:planPath,execution:state});
+    assert.equal(context.specDigest,digest(doc));
+    assert.equal(context.planDigest,digest(plan));
+    assert.equal(context.execution.approvals.B.digest,digest({specDigest:context.specDigest,planDigest:context.planDigest}));
+    assert.equal(context.execution.tasks[taskId].phase,'started');
+    await writeFile(out,JSON.stringify(context));
+    plan.entries[0].body+=' Changed design without a new revision.';
+    await writeFile(planPath,JSON.stringify(plan));
+    assert.throws(()=>cli('task-context',taskId,'--out',out),/different technical-plan digest/);
+    assert.deepEqual(JSON.parse(await readFile(out,'utf8')),context);
   }finally{await rm(dir,{recursive:true,force:true});}
 });
 

@@ -41,6 +41,17 @@ material cost. Include one alternative only if it could realistically change the
 No mandatory pattern catalog, ADR field table or speculative framework. Add migration,
 auth, rollout, observability or deployment details only when affected.
 
+For UI work, capture the agreed journey, screen/component hierarchy, interactions and
+relevant states, responsive behavior and design-system choices in concise plan entries.
+Reference existing mockups or designs by exact file/frame/section and revision or local
+snapshot; distinguish approved requirements from illustrative examples and open choices.
+Put observable UI expectations in acceptance criteria. Link the relevant entries to each
+implementing task with `planRefs`, including UML and API/data schemas it must obey; use
+`refs` for related contracts and `global: true` only for actual cross-cutting decisions.
+Decisions left only in conversation or an unlinked visual will not reach a task excerpt.
+Before Gate B, inspect representative task excerpts for this coverage. Do not add a
+separate design document or duplicate the plan to achieve it.
+
 Before presentation, apply a read-only SOLID critique through
 [specialist routing](../modules/review/references/specialist-reviews.md), or use the
 [bundled modular design guide](../modules/development/references/modular-design.md).

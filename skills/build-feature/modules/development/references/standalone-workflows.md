@@ -70,6 +70,9 @@ Use for material UI or UX changes; follow frontend.md for framework-specific gui
 
 - Inspect existing screens, tokens, shared components, and interaction conventions.
   Identify the main user action and the states needed to complete it.
+- When an approved UI design or flow exists, inspect its exact referenced revision and
+  preserve its decisions. Compare the rendered result and interactions with it during
+  validation; adjacent screens and generic preferences do not override that contract.
 - Reuse the design system. Keep hierarchy, labels, spacing, and feedback coherent with
   adjacent screens. Adapt layout to content and viewport rather than one screenshot.
 - Include pending, empty, error, success, validation, and disabled states where relevant.

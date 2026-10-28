@@ -92,11 +92,12 @@ export function taskContext(doc, taskId, plan) {
   }
   for (const id of [...planIds]) collectPlan(id);
   return {
-    document: {id: doc.id, revision: doc.revision, title: doc.title},
+    document: {id: doc.id, revision: doc.revision, title: doc.title, summary: doc.summary,
+      goals: doc.goals, users: doc.users, outOfScope: doc.outOfScope, successMetrics: doc.successMetrics},
     constraints: doc.constraints, preDraft: doc.preDraft,
     task, requirements: doc.requirements.filter(item => requirementIds.has(item.id)),
     dependencies: dependencyTasks.map(({id, title, scope, planRefs}) => ({id, title, scope, planRefs})),
-    technicalPlan: plan && {id: plan.id, revision: plan.revision, constraints: plan.constraints, preDraft: plan.preDraft,
+    technicalPlan: plan && {id: plan.id, revision: plan.revision, summary: plan.summary, constraints: plan.constraints, preDraft: plan.preDraft,
       entries: entries.filter(item => planIds.has(item.id))},
     seeds: doc.seeds.filter(item => seedIds.has(item.id)), checks,
     risks: doc.risks.filter(item => item.status === 'open'),

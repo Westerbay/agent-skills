@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Preserve approved feature framing in CODE task excerpts and carry linked UML, schemas
+  and UX/UI decisions into worker assignments. Verify context access before coding and
+  conformance during task validation and the existing integrated review.
+
 - Replace the blanket `useEffect` ban with documentation-driven selection: use suitable
   framework/query/action APIs for their responsibilities and Effects for appropriate
   external synchronization, including a guarded fetching fallback when needed.
