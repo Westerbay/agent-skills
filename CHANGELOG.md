@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Replace the blanket `useEffect` ban with documentation-driven selection: use suitable
+  framework/query/action APIs for their responsibilities and Effects for appropriate
+  external synchronization, including a guarded fetching fallback when needed.
+
 - Require English Conventional Commit messages and type-prefixed branch names in both
   development workflows; document the common types and preserve explicit user names.
 - Merge build-feature technical and implementation approval into Gate B, with logic/UML,

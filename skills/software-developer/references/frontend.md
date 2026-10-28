@@ -5,11 +5,33 @@ localization, accessibility, interaction behavior, or web page delivery and meta
 
 ## React and component boundaries
 
-- Treat `useEffect` as banned. Prefer event handlers, derived state,
-  router loaders/actions, server-state or query APIs, form APIs, component keys, refs,
-  or `useSyncExternalStore`.
-- If `useEffect` appears unavoidable for true external synchronization, stop before using
-  it and explain why the alternatives do not fit. Keep dependencies and cleanup narrow.
+- Choose `useEffect` by purpose, not by a ban. Before adding or replacing one, check
+  React's guidance and the official documentation matching the project's installed
+  framework, router, query, form, or integration library. Use its intended API when it
+  already owns the behavior; no special approval is required for an appropriate Effect.
+- Calculate derived values during rendering. Handle user-triggered work in event
+  handlers or the tool's action/mutation API; avoid Effects that chain state updates.
+- For server data, prefer the project's documented loading, server-fetching or query/cache
+  mechanism when suitable. Do not duplicate query-key-driven fetching with an Effect and
+  `refetch()`, or add a dependency solely to avoid an Effect.
+- Use an Effect for synchronization with an external system over the component lifecycle:
+  a connection, browser subscription, or imperative widget, for example. Prefer the
+  library's React adapter or `useSyncExternalStore` for a supported store subscription.
+- Fetching in an Effect remains a valid fallback when no suitable mechanism exists.
+  Handle loading/errors, stale responses and cancellation or ignored obsolete results;
+  Effects do not supply server-rendered data.
+- Keep each Effect focused, declare its reactive dependencies, and mirror setup with
+  cleanup where needed. Verify dependency changes, unmount and development setup/cleanup
+  replay. Do not suppress dependency checks, hide lifecycle bugs with run-once refs,
+  or move side effects into rendering just to remove an Effect.
+
+Use React's [useEffect reference](https://react.dev/reference/react/useEffect),
+[You Might Not Need an Effect](https://react.dev/learn/you-might-not-need-an-effect), and
+[Synchronizing with Effects](https://react.dev/learn/synchronizing-with-effects) alongside
+the relevant tool's documentation; these examples are decision guidance, not a whitelist.
+
+## Component organization
+
 - For inputs, changes, submits, and clicks, define named handlers before JSX and pass
   stable references.
 - Compute non-trivial prop values before JSX and pass named variables. Keep inline props
