@@ -1,4 +1,10 @@
-# PR content JSON
+# Optional structured PR content
+
+Use this JSON format for the bundled template or a heading-only variant with supported
+sections. For another repository template, author UTF-8 Markdown directly, preserving
+its static instructions and checklists, then use `render --body-file <authored.md>`.
+That route preserves text without structural rewriting or checking its claims; inspect
+the body against the captured diff and actual evidence before publication.
 
 Required `title` (one line) and `description` (concrete resulting behavior). Optional:
 - `changes`: Added/Changed/Removed/Fixed string arrays.
@@ -15,12 +21,13 @@ Required `title` (one line) and `description` (concrete resulting behavior). Opt
   include before/after views when useful. Inspect captures and omit private data.
 
 Template resolution: explicit `--template`, otherwise bundled `assets/PR.md`.
-Use `--template` for a repository PR template or another user-selected template.
+Use `--template` only for a supported heading-only template with the structured route.
 No personal home-directory template or connected tracker is required.
 Use `related` only for GitHub issues explicitly supplied by the user or referenced in the diff;
 do not search external trackers or add unrelated tickets.
 Section order follows the template; empty sections/categories disappear. Unsupported
-custom headings raise an error so their handling can be consciously added. The renderer
+headings or static content produce an error directing you to the authored-body route;
+the renderer never silently removes repository instructions or checklist text. It
 adds the GitHub screenshot placeholder for detected UI work. Add the section explicitly
 when UI work escaped the file-extension heuristic. Attempt straightforward capture and
 attachment before falling back to a placeholder. Describe any capture/upload blocker in
