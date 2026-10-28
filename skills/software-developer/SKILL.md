@@ -1,325 +1,145 @@
 ---
 name: software-developer
-description: Default base workflow to implement, fix, refactor, or extend software end to end across backend, frontend, database, integration, and bug-fix work. Use for authorized code changes unless a narrower installed skill explicitly orchestrates the whole task; still use it with compatible specialist skills such as TDD or UI guidance. Covers repository inspection, minimal vertical implementation, review-derived quality checks, validation, and safe non-production test-data seeding when missing data blocks verification. Do not use for read-only explanation, review, planning, or diagnosis unless the user also asks for changes.
+description: Implement, fix, refactor or extend software with repository-shaped boundaries and proportionate validation. Use for authorized code changes, alongside relevant specialist guidance, unless a narrower workflow already orchestrates the task. Do not apply an implementation workflow to read-only explanation, planning or review.
 ---
 
 # Software Developer
 
-Deliver the smallest maintainable change that fits the repository, preserves existing
-paths, and can be meaningfully exercised.
-Choose clear names, cohesive responsibilities, and useful extension boundaries while
-implementing each behavior. Refactor the changed code as part of delivery, not only
-when a later review requests it.
+Deliver the smallest maintainable change that fits the repository and can be meaningfully
+exercised. Keep names, responsibilities and extension boundaries clear while implementing;
+apply useful in-scope refactors instead of leaving problems for a later review.
 
-## Portable use and authorization
+## Scope and authority
 
-This skill works with local repository tools. It requires no hosting provider,
-issue tracker, messaging service, MCP server, or other installed skill.
-Resolve reference paths relative to this skill's directory, not the project directory.
-Follow the user's instructions and the repository's conventions over this skill's
-style preferences. Apply language-specific guidance only to that language or framework.
+This workflow needs only local repository tools. Resolve references relative to this
+skill directory. Follow user instructions and repository conventions; apply stack-specific
+guidance only where that stack exists. Do not install skills or connect services implicitly.
 
-Use the tools actually available in the environment. Prefer repository scripts and
-native local commands; do not assume a particular agent API or desktop application.
-If a useful capability is unavailable, use an equivalent local check or report the
-specific validation limit. Do not install other skills or connect services automatically.
+Implementation authority covers relevant local edits and safe validation. Preserve unrelated
+work. Git writes, publication, deployment, messaging and external mutations need their own
+user authority; existing explicit authorization remains valid. Keep planning artifacts local
+unless publication was requested. Do not alter secrets or production configuration without
+explicit authorization, or mutate production or an unverified/shared database. Resolve
+material architecture, contract, data, auth or destructive choices outside the agreed scope
+before implementing them. Missing external access should leave a useful local handoff.
 
-Implementation authorization covers in-scope local edits and safe validation. Preserve
-unrelated work. Do not commit, rebase, push, publish, deploy, send messages, or mutate
-external services without user authorization for that action. Keep planning artifacts
-local unless publication is requested. Never alter secrets or production configuration
-without explicit authorization, or mutate production or an unverified/shared database.
-For material architecture, contract, data, auth, or destructive changes, first check
-whether the user already authorized them. Explain and seek confirmation only for
-changes outside that scope or unresolved choices that materially affect the result.
+## 1. Understand the change at the right depth
 
-When the user requests issue, review-request, or communication work, use their existing
-provider and available tools. A pull request and a merge request serve the same role
-here. Do not require a hosting account to complete local development. If external access
-is unavailable, prepare a local handoff and state what remains unperformed.
+Inspect applicable instructions, current Git state, the owning code and relevant tests.
+Identify the requested observable behavior, contracts to preserve and a validation route.
+Reuse existing components, schemas, types, constants, predicates and fixtures before adding
+another implementation. Match the repository's commands and generated-file workflow.
 
-## 1. Establish the local contract
+For a small local change, inspect the affected owner and callers, then proceed with a
+focused check. A written impact map, scenario matrix or separate plan is not required when
+it adds no useful decision. For shared rules, cross-module changes or higher-risk behavior,
+use the impact and scenario guidance in
+[maintainability.md](references/maintainability.md#impact-and-scenarios-for-shared-or-risky-changes).
+Give a short plan for non-trivial work and revise it when evidence changes the approach.
 
-Before editing:
+Investigate discoverable facts before asking questions. Ask only when unresolved choices
+materially affect the result, compatibility, security or long-term maintenance. For a
+capability with a mature ecosystem or many known edge cases, compare an existing dependency
+or one credible package with a local implementation using current official documentation.
+Consider maintenance, license, compatibility, security and runtime cost; skip package
+research for trivial helpers. Add a dependency only for a concrete benefit.
 
-1. Read applicable repository instructions, docs and ADRs, nearby code and tests,
-   schemas, current git state, and relevant history. Preserve unrelated user work.
-2. State the observable change, behavior that must remain unchanged, affected public or
-   persisted contracts, and validation route. Before adding a rule or supported variant,
-   identify its owning module and the callers that should remain unaffected.
-3. Build a small impact map. Find the rule or contract owner, then trace every writer,
-   reader, caller, omitted/default call site, UI/export surface, cache, background path,
-   and provider boundary affected by the change. Search by symbol and by duplicated
-   literal/value; inspect sibling implementations and transitive consumers.
-4. Search before creating. Reuse existing components, helpers, formatters, schemas,
-   types, constants, domain predicates, factories, fixtures, and workflow scripts.
-   When the requested capability has a mature package ecosystem or many known edge cases,
-   check current official documentation and package registries before writing it from
-   scratch. Compare an existing dependency or one credible package with a local
-   implementation. Adopt a package only when it materially reduces code or correctness
-   risk after considering maintenance, security, license, compatibility, runtime/bundle
-   cost, and escape hatch. Skip this research for trivial helpers.
-5. Write a scenario matrix proportional to risk: happy path plus relevant null, empty,
-   zero, partial/mixed, stale, retry, duplicate, concurrent, locale/time-zone,
-   cross-scope, and legacy-data cases. Do not assume an optional value or omitted
-   dependency means the feature should silently switch off.
-6. Match the repository's package manager, commands, architecture, naming, formatting,
-   test style, comment style, and generated-file workflow.
-   Before authorized Git delivery, follow
-   [references/git-conventions.md](references/git-conventions.md): English
-   `type(scope): summary` commits and `<type>/<short-kebab-case-description>` branches.
-   Prefer rebase over merge commits when synchronizing feature branches. This preference
-   does not authorize rewriting published history or force-pushing; obtain explicit
-   authorization for those actions.
-7. Ask only when unresolved ambiguity materially changes architecture, security, auth,
-   permissions, payments, data models, migrations, public APIs, destructive behavior, or
-   long-term maintenance. Investigate discoverable facts first.
+When delegated from an approved plan, read the supplied task context and referenced UML,
+schemas and UX/UI artifacts before editing. Check access and revision; inherited chat is
+not a substitute. Preserve approved decisions while choosing unconstrained implementation
+details. Resolve missing/conflicting inputs with the coordinator and report deviations
+instead of silently redesigning. Return conformance evidence using the acceptance/plan IDs.
 
-For non-trivial work, give a short plan covering change, validation, and material risks.
-Re-plan when evidence invalidates it.
+## 2. Implement cohesive behavior slices
 
-When implementing a delegated task from an approved plan, read the supplied task context
-and its referenced UML, schemas and UX/UI artifacts before editing. Verify that they are
-accessible and match the assigned revision; do not assume inherited chat context. Treat
-approved behavior and design decisions as the contract, while retaining freedom over
-unconstrained implementation details. Resolve missing or conflicting inputs with the
-coordinator and report deviations instead of silently redesigning. Return evidence of
-conformance with the relevant acceptance/plan IDs, not only a list of passing tests.
+Implement one observable behavior at a time, then simplify its decisions and ownership.
+Prefer a root-cause fix; reproduce a bug when practical and identify any temporary mitigation.
+Preserve public APIs, persisted contracts and unrelated behavior unless their change was
+requested. Avoid unrelated cleanup, whole-file formatting and speculative frameworks.
 
-## 2. Work in vertical behavior slices
+Use these references only when relevant:
 
-- Implement one observable behavior at a time.
-- After that behavior works, simplify its names, decisions, and responsibilities before
-  starting the next slice. Apply justified local refactors within the implementation
-  scope; do not merely leave recommendations for problems introduced by this change.
-- For meaningful business rules, regressions, backend logic, and silently breakable
-  transformations with a useful observable test seam, follow the test workflow in
-  [references/standalone-workflows.md](references/standalone-workflows.md). An installed
-  compatible testing skill may supplement it, but is not required. Only add tests that
-  protect real behavior.
-- Reproduce bugs before fixing them when practical, then protect the root cause with a
-  regression test when the failure can be reproduced through a meaningful observable
-  seam.
-- Test the changed integration seam, not only new pure helpers. When behavior crosses a
-  shared component, caller default, cache, query, provider, script, or UI/server
-  boundary, prefer a test or runtime check that crosses that boundary.
-- Prefer a root-cause fix. Label any temporary mitigation and state its follow-up risk.
-- Apply a test-value gate before writing each test. A test earns its maintenance cost
-  only if it protects a non-trivial decision, business invariant, regression,
-  transformation, failure mode, or integration contract and would fail for a plausible
-  defect that matters to a caller or user.
-- Do not write tests for trivial getters or setters, value echoing, tautological equality,
-  constants, framework behavior, trivial wiring/pass-through code, or static component
-  size, spacing, CSS classes, and visual styling. An equality matcher is fine when it
-  proves a meaningful rule; it is not useful when it merely compares a value with the
-  same value the test just assigned or passed in.
-- A getter or setter enforcing validation, normalization, or a state invariant does have
-  behavior worth protecting. Choose tests by the contract, not the method's shape.
-- Prefer fast unit tests for rules, real integration tests for boundaries, and a small
-  set of critical end-to-end journeys. Use the 80/15/5 portfolio guidance in the test
-  workflow when assessing a suite; never add filler or remove useful coverage for a ratio.
-- It is valid to add no tests when the change contains no behavior worth protecting.
-  Do not create a test merely to increase coverage or to claim that testing occurred.
-  Validate trivial code through the narrowest relevant existing check, runtime flow, or
-  visual inspection instead.
-- For material UI structure, visual design, responsive behavior, interaction, or UX work,
-  use the UI workflow in [references/standalone-workflows.md](references/standalone-workflows.md).
-  A compatible installed design skill may supplement it when useful.
-- For an explicit architecture review or a genuine cross-module design problem, use the
-  architecture workflow in that reference. Do not require a separate architecture skill
-  or a review ceremony for every large change.
+| Change | Guidance |
+| --- | --- |
+| Non-trivial logic, types, shared rules or refactoring | [Maintainability](references/maintainability.md) |
+| New responsibilities, variants or module dependencies | [Modular design and SOLID](references/modular-design.md) |
+| Web UI, forms, state, accessibility, localization or route delivery | [Frontend](references/frontend.md) |
+| React/TypeScript query wrappers, tables or pagination | [React/TypeScript](references/react-typescript.md) |
+| Persistence, transactions, migrations, providers or background effects | [Data and integrations](references/data-and-integrations.md) |
+| Behavioral tests, material UI/UX work or architecture choices | Relevant section of [specialist workflows](references/standalone-workflows.md) |
 
-## 3. Implement with repository-shaped boundaries
+Keep these invariants throughout implementation:
 
-- For web UI, route delivery/metadata, forms, client state, localization, or accessibility
-  changes, read and follow [references/frontend.md](references/frontend.md).
-- For persistence, transactions, migrations, external providers, or background side
-  effects, read and follow
-  [references/data-and-integrations.md](references/data-and-integrations.md).
-- For non-trivial logic, shared rules, or refactoring, read and
-  apply [references/maintainability.md](references/maintainability.md).
-- Before adding responsibilities, supported variants, or cross-module dependencies,
-  apply [references/modular-design.md](references/modular-design.md) to choose coherent
-  ownership, SOLID contracts, and a structure that localizes the intended change.
+- Give business rules, constants and contracts a meaningful owner. Share real policies
+  across consumers, not merely similar syntax; avoid disconnected mappings and a global
+  constants collection. Check all callers when changing shared defaults or dependencies.
+- Name domain decisions clearly. Decompose dense conditions when it helps comprehension,
+  preserving short circuiting, evaluation order, exceptions and logical/bitwise semantics.
+  Short idiomatic expressions may remain inline when an extraction adds no meaning.
+- Extract cohesive responsibilities or useful reuse seams. Keep lifecycle ownership,
+  authorization, transactions, side effects and cleanup visible. File counts and LOC are
+  investigation signals, not reasons to introduce forwarding wrappers.
+- Validate untrusted input at its boundary, then use the owned concrete type internally.
+  Do not replace validation or a broken contract with unsafe assertions, `any`, arbitrary
+  generic promises or error suppression. Keep useful error causes and statuses visible;
+  logs must exclude secrets and sensitive data.
+- Remove dead exports, obsolete props, disconnected implementations and scaffolding added
+  by the change. Update docs whose facts or procedures changed.
 
-### Scope and reuse
+Tests earn their maintenance cost by protecting a plausible defect in caller-visible
+behavior, a rule, a regression or an integration contract. Reuse sufficient existing
+coverage. Use TDD for useful new/regressed behavior as described in the test workflow;
+a behavior-preserving refactor can start from existing green tests. Do not manufacture
+red/green cycles or tests for trivial getters, constant echoes, wiring or private helpers.
+A validating accessor does have behavior. It is valid to add no test when none adds value.
 
-- Preserve public APIs, data contracts, migrations, and user-visible behavior unless the
-  request requires changing them.
-- Prefer standard library, existing dependencies, and established local utilities. Add a
-  dependency only when it clearly lowers risk or complexity, and explain in the handoff
-  why existing options were insufficient.
-- Keep changes focused. Avoid unrelated cleanup and whole-file reformatting.
-- Centralize each business rule in one source of truth. Reuse domain predicates,
-  constants, and mappings across entry points instead of copying equivalent lists or
-  conditions. Search by duplicated literals and regex fragments as well as symbols;
-  compare semantics and consumers before consolidating. Generated repetition and separate
-  runtime implementations may be necessary; keep their contract and parity checks aligned.
-- Place constants with the module that owns their meaning. Public product identity,
-  deployment settings, infrastructure defaults, protocol statuses, and feature rules
-  should not accumulate in one shared configuration object. Share a rule only across
-  real consumers, and wire its authoritative enforcement as well as its UI validation.
-  Prefer framework protocol constants where available. Naming a literal is insufficient
-  if it creates a dependency in the wrong direction or a setting with no runtime effect.
-- Express time-based configuration through named constants owned by the relevant module.
-  Make the unit part of the name and keep the human duration visible in a short comment
-  when arithmetic alone does not make it immediately obvious.
-- Let the owning module export a named contract and canonical mapping. Derive lookup
-  tables and subsets from it, or make copies compile-time checked; do not maintain
-  disconnected lists that can drift.
-- When adding a parameter or dependency, inspect every caller. Make required behavior
-  required; if omission is valid, name and test the fallback instead of silently
-  bypassing the new behavior.
-- When changing a shared component, helper, default, cache key, formatter, or error,
-  inspect every existing consumer and keep unrelated behavior opt-in.
-- Extract code only for a real repeated pattern, a clear responsibility, a domain seam,
-  or a concrete testability/locality gain.
-- Optimize for sufficient quality, not maximal ceremony. Stop once the requested
-  behavior is maintainable and proportionally validated. Do not add speculative
-  abstractions, generic frameworks, exhaustive edge handling unsupported by the product
-  contract, duplicate tests, or documentation that merely restates the code.
-- Remove dead exports, unreachable branches, obsolete props, unused messages, and
-  scaffolding introduced by the change.
+Exercise the real changed seam, not only a new pure helper. Prefer unit tests for rules,
+integration tests for collaborations and a small set of critical E2E journeys. The 80/15/5
+portfolio preference is contextual guidance for suite assessments, never a test quota.
+Targeted visual regression can protect an approved UI contract; incidental CSS assertions
+or a screenshot for every component do not follow from that permission.
 
-### Responsibilities and data flow
+## 3. Verify the result and its consumers
 
-- Name operations for what they do, predicates for the decision they express, and
-  identifiers for their domain role. Follow the repository's language-specific casing.
-  Recheck names when a helper gains callers outside its original context.
-- Split a file or module when it mixes independent responsibilities or materially harms
-  navigation. Extract cohesive steps with simple inputs; keep orchestration readable and
-  preserve authorization, transaction/lock scope, side-effect order, cancellation, retries,
-  errors and cleanup. Do not split into shallow pass-through wrappers.
-- Reserve ternary expressions for short choices between simple scalar values or existing
-  references. If either branch constructs a full object or array, use a named variable
-  with `if`/`else`, a guard clause, or an early return so the control flow stays readable.
-- Keep compound conditions readable. Before an `if` accumulates several clauses or mixes
-  unrelated concepts, name the intermediate booleans or extract a focused private/domain
-  predicate. Prefer guard clauses and one conceptual decision per condition. Place named
-  intermediate values before the control statement; do not hide business rules inside a
-  dense boolean expression. Avoid extracting a helper when one short, obvious condition
-  is clearer inline. Preserve short circuiting, property reads, call order, exceptions,
-  and logical versus bitwise semantics; naming an expression must not evaluate it early.
-- Treat a new complexity or lint suppression as evidence to revisit the boundary. Keep
-  provider-neutral domain code free of provider-specific imports when a repository seam
-  already exists. Treat line counts and complexity scores as investigation signals, not
-  automatic defects or reasons to eliminate useful guards. Follow existing lint policy;
-  changing its thresholds is a separate decision.
+Run the narrowest meaningful check, then related type, lint, build or integration checks
+as risk requires. Security, auth, permissions, payments, persisted data and migrations
+need broader relevant validation. Reuse still-valid evidence for unchanged code rather
+than repeating an entire suite after every step.
 
-### Types, validation, and errors
+For shared or risky changes, replay the impact map against the actual result: check the
+owner and all affected consumers, defaults, error behavior, equivalent flows and relevant
+failure/concurrency/legacy-data cases. Verify that new boundaries are actually used and
+that no disconnected rule or optional bypass remains. A local change needs only the
+corresponding focused check, not an exhaustive cross-repository ceremony.
 
-- Reuse the concrete exported type owned by the data or API contract.
-- Prefer explicit named boundary and domain types that reveal intent at the usage site.
-  Avoid derived utility types such as `Pick`, `Omit`, `NonNullable`, `ReturnType`, deep
-  indexed-access chains, and similar type machinery when an owned named type can express
-  the contract directly. Use those utilities only for a genuinely mechanical local
-  transformation where introducing a named contract would be less clear.
-- Follow repository policy for annotations. Omit redundant return types already inferred
-  from a typed local; use an explicit named interface when it documents a real module or
-  public boundary.
-- Validate untrusted runtime input at the boundary with the project's schema/validator.
-  Keep `unknown` for genuinely unvalidated input, caught errors or heterogeneous values;
-  narrow it promptly where the value's meaning is established. Validated internal values
-  and APIs should use the concrete contract owned by their domain. Do not re-parse trusted,
-  typed internal values without a concrete reason or leak `unknown` through their types.
-- Do not bypass type problems with `as`, double assertions, `any`, non-null assertions,
-  or error-ignore directives. Fix the contract or validate and narrow at the boundary.
-  Prefer annotations, inference, `satisfies` and discriminated unions. A parser generic
-  must derive its result from a runtime schema/validator; an unconstrained caller-selected
-  type does not prove the parsed output. Do not disguise `unknown` with `any`, `{}`, `object`
-  or a generic that promises an arbitrary result.
-- Distinguish unsafe assertions from literal-preserving `as const`, checked `satisfies`,
-  and import aliases; follow stricter repository rules where documented. If an assertion
-  is unavoidable at a library seam, keep it local, explain and verify the invariant, and
-  use it only when repository policy permits. It must not replace runtime validation.
-- Do not use lint disables, wildcard imports, or swallowed exceptions to silence a design
-  or type problem.
-- Preserve useful error status, cause, and context. Never report success after a failed
-  operation.
-- Keep logs structured and exclude secrets, tokens, payment data, and personal data.
+For material UI changes, compare actual interactions and rendered output with approved
+designs at relevant states and viewports. Inspect emitted semantics and route delivery
+where affected. If missing local data blocks verification, use
+[non-production test data](references/dev-test-data.md); its target and side-effect guards
+apply before writes. State exactly what could not be exercised.
 
-## 4. Walk the impact map before review
+Inspect the final diff after fixes and generated-file updates. Correct concrete problems
+introduced by the change; report unrelated debt separately. Stop once the requested
+behavior is maintainable and proportionally validated, or report the exact blocker.
 
-Inspect the final diff, then replay the impact map against actual code:
+The bundled guidance works without other skills. Available `code-quality-review`,
+`solid-architecture-review` or `web-review` can deepen an applicable check; discover their
+actual paths and do not run every specialist automatically. A requested `security-audit`
+retains its own mode, read-only source and execution controls. Ordinary development does
+not imply a full audit. Follow the orchestrator's review boundaries when part of a larger
+workflow instead of adding another review ceremony to each task.
 
-1. Trace each changed invariant end to end: input/write -> domain owner -> persistence or
-   provider -> query/read -> API -> UI, export, notification, or background consumer.
-2. Search every changed shared symbol again. For each caller, verify required behavior,
-   fallback semantics, cache identity, error handling, formatting, and user feedback.
-3. Compare equivalent paths. The same rule, status, price, permission, locale, or display
-   value must not produce different answers across list/detail, web/admin, table/export,
-   sync/async, or create/update flows unless the difference is explicit.
-4. Exercise the scenario matrix. Pay special attention to null/empty/zero values,
-   partial or mixed aggregates, retries and duplicate delivery, stale state, concurrency,
-   legacy rows/defaults, time zones, and cross-scope data.
-5. Confirm one owner per rule or contract; no new disconnected list, mapping, formatter,
-   predicate, optional bypass, dead export, unreachable branch, speculative wrapper,
-   cast, suppression, or generic error replacing actionable context.
-6. Check auth, ownership, permissions, privacy, enumeration, logs, query bounds, cache
-   reuse, transaction boundaries, provider-call concurrency, generated artifacts, and
-   deployed-resource replacement behavior where relevant.
-7. For changed module boundaries, replay the supported change scenario: verify the
-   intended callers use the new seam and that policy ownership and dependency direction
-   are clearer. For web changes, inspect emitted semantics and route delivery as well
-   as component source; include public/private indexing intent where relevant.
+## 4. Deliver a reproducible handoff
 
-Fix concrete problems found. Do not refactor unrelated pre-existing debt; report it
-separately when relevant.
+Before authorized branch/commit delivery, follow
+[Git naming and delivery](references/git-conventions.md): English `type(scope): summary`
+commits and `<type>/<short-english-kebab-case-description>` branches. Preserve explicit
+user names and published history; naming conventions do not grant Git authority. Use the
+repository's hosting provider when requested, or keep delivery local when unavailable.
 
-The bundled guidance is sufficient without other skills. When installed and relevant,
-`code-quality-review`, `solid-architecture-review`, and `web-review` can deepen a focused
-check or an explicitly requested review. Discover their actual installed paths rather
-than assuming sibling folders. Do not run every specialist for every change. For a
-requested security review, an available `security-audit` retains its own mode, read-only
-source, and execution-safety rules; ordinary development does not imply a full audit.
-
-## 5. Validate and make the feature exercisable
-
-1. Run the narrowest meaningful behavior test first when one exists. New tests are not
-   required when none pass the test-value gate.
-2. Add related typecheck, lint, format check, integration tests, or broader suites as risk
-   increases.
-3. For security, auth, permissions, payments, data, and migrations, run broader relevant
-   checks and state residual risk explicitly.
-4. Visually or interactively verify material UI behavior when the environment permits.
-5. If missing local data prevents automated or manual verification, read and follow
-   [references/dev-test-data.md](references/dev-test-data.md).
-6. Inspect the final diff after automated fixes and generated-file updates.
-
-Do not claim completion when validation was not attempted. State the exact blocker and
-residual risk when a check cannot run.
-
-## 6. Hand off a reproducible result
-
-Report:
-
-- behavior and files changed;
-- validation commands and outcomes;
-- when no test was added, the concise reason no meaningful behavior required one;
-- skipped or failed checks and remaining risk;
-- assumptions or intentional non-changes;
-- when data was seeded: exact seed command, route/screen, record identifiers or local
-  account, test steps, expected result, cleanup/reset command, and untested behavior.
-
-## Preserved local development preferences
-
-- Define named behavior and render callbacks before JSX or the objects configuring them:
-  `onClick={handleNextPage}`, `queryFn: fetchPage`, `cell: renderStatus`.
-  Pass an existing callable directly instead of adding a forwarding wrapper.
-- Do not import a persistence adapter merely to obtain an injection token or type.
-  Keep those contracts independent of the adapter's runtime imports.
-- Put shared limits/defaults with their contract, feature display and filter settings
-  with the feature, and seed counts/random seeds with the seeder. Wire one configured
-  value through consumers and include varying parameters in cache identity.
-  Obvious indices/increments do not need configuration; name ambiguous library sentinels.
-- Check branch base and repository naming conventions before creating a branch;
-  use the change type as the prefix, such as `feat/reader-export` or `fix/cache-key`,
-  rather than an agent-name prefix. Preserve an explicit user-selected name and do not
-  rename an existing branch merely to normalize it. Avoid including commits from
-  another feature silently.
-- Update documentation whose facts or procedures changed, removing obsolete information
-  rather than appending a historical log.
-- For React/TypeScript query wrappers, tables, or pagination, also read
-  [references/react-typescript.md](references/react-typescript.md). It preserves the
-  detailed guidance on native query options, cancellation, stable table inputs,
-  cursor ordering, accessibility, and retry after returning to a cached page.
+Report resulting behavior, changed files, meaningful checks and outcomes, unverified areas
+and residual risks. When no test was added, state briefly why existing checks or another
+validation route were sufficient. For delegated work, include the applicable acceptance/
+plan IDs and any deviation. If seeding was needed, include the safe command, screen/record,
+steps, expected result and scoped cleanup from the test-data guide. Do not claim completion
+from passing tests alone when an approved behavior remains missing or contradicted.

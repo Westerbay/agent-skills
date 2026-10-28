@@ -45,6 +45,9 @@ vocabulary and an English description: `feat/reader-export`, `fix/cache-key`,
 agent identifier. Use an explicit user-selected name when provided; do not rename an
 existing branch merely to normalize it. Check the intended base and validate the exact
 proposed name with `git check-ref-format --branch <name>` before authorized creation.
+Check that the base does not silently include another feature's commits. Prefer rebase
+over merge commits for an authorized synchronization when compatible with repository
+policy; that preference never authorizes rewriting published history or force-pushing.
 
 ## Basis
 

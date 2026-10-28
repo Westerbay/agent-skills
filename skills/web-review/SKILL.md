@@ -45,6 +45,12 @@ intentionally excluded status, rendering mode, and affected journeys. Inspect ex
 evidence before asking about indexing intent. Unresolved product intent is a question,
 not proof of a defect.
 
+When an approved UI/UX plan or design exists, read its exact referenced revision and
+compare the affected flow, states and rendered result with it. Ask the coordinator for
+missing references instead of assuming chat attachments are available or inventing a
+replacement design. Record inaccessible visuals as a coverage limit. This checks the
+existing contract; it does not introduce another design phase or approval gate.
+
 ## 2. Review the affected contracts
 
 Read only the references relevant to the change:
@@ -86,6 +92,9 @@ Use existing safe checks proportionally:
   in private component methods, wrapper counts, CSS class strings, or incidental styling.
   An automated accessibility scan supplements manual interaction checks; it does not
   certify accessibility or indexing.
+- Use selected visual regressions when they protect an approved layout or meaningful
+  rendering behavior. Keep fixtures and rendering conditions stable, inspect baseline
+  changes, and avoid snapshots added solely to increase coverage.
 
 Use safe local fixtures and existing project tooling. If a check is unavailable, state
 which claim remains unverified. Do not invent screenshots, browser results, SEO scores,
