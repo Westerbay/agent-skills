@@ -9,6 +9,13 @@ Explain the concrete problem and resulting behavior, then validation and relevan
 Inspect applicable repository rules and user authority. Never discard or stage unrelated
 work. Publication requires the user's authorization; preparation alone does not grant it.
 
+Use the user's current conversation language for questions, handoffs and PR body prose
+unless they explicitly request another output language. Honor an explicit repository
+language requirement for the PR body when the user has not overridden it; English skill
+source or examples alone do not establish one. Keep PR titles in English using
+`type(scope): summary`, and preserve existing English commit and branch-name rules.
+Keep exact identifiers, schema keys/enums, paths, commands and quoted evidence unchanged.
+
 Preparation needs Python 3.10+ and Git, with no third-party Python packages. The skill
 bundles its default PR template and does not require Notion, a connected tracker, another
 skill, or a personal template. Publishing uses an authenticated GitHub CLI (`gh`) or an
@@ -49,6 +56,11 @@ python3 <draft-pr-skill>/scripts/prepare_pr.py render --context <context.json> -
 
 This preserves the authored text exactly; it does not verify its claims or approve
 publication. Inspect it against the committed diff and actual check evidence.
+
+For localized headings and labels, translate the bundled template into the chosen
+language and use this authored-body route. Preserve any required custom-template
+headings, instructions and checklist structure; translate its editable prose where
+permitted. The structured renderer's English labels are not a language preference.
 
 For the bundled template, read [references/content.md](references/content.md), author
 the content JSON, then run:

@@ -18,15 +18,17 @@ for (const [file, expected] of Object.entries(manifest.files ?? {})) {
     errors.push(`Invalid upstream manifest entry: ${file}`);
     continue;
   }
+  // The local entrypoint adds language guidance; the complete upstream source is retained.
+  const localFile = file === 'SKILL.md' ? 'UPSTREAM-SKILL.md' : file;
   try {
-    const contents = await readFile(path.join(directory, file));
+    const contents = await readFile(path.join(directory, localFile));
     const actual = createHash('sha1')
       .update(`blob ${contents.length}\0`)
       .update(contents)
       .digest('hex');
-    if (actual !== expected) errors.push(`${file}: differs from the pinned upstream blob`);
+    if (actual !== expected) errors.push(`${localFile}: differs from the pinned upstream blob for ${file}`);
   } catch (error) {
-    errors.push(`${file}: ${error.message}`);
+    errors.push(`${localFile}: ${error.message}`);
   }
 }
 

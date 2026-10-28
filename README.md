@@ -9,7 +9,7 @@ Reusable workflows for software development, distributed as [Agent Skills](https
 | [software-developer](skills/software-developer/SKILL.md) | Implement, fix, refactor and validate software changes using the repository's conventions. |
 | [draft-pr](skills/draft-pr/SKILL.md) | Prepare and open a GitHub draft PR from a verified committed diff, using a bundled or custom template. |
 | [build-feature](skills/build-feature/SKILL.md) | Guide a substantial feature from discovery and explicit approvals through implementation, review and delivery. Includes planning document tools and review helpers. |
-| [security-audit](skills/security-audit/SKILL.md) | Cloudflare's source-first security review and audit, copied unchanged with its MIT license and attribution. |
+| [security-audit](skills/security-audit/SKILL.md) | Cloudflare's unchanged security workflow, with a local language-aware entrypoint, MIT license and attribution. |
 | [code-quality-review](skills/code-quality-review/SKILL.md) | Review and refactor naming, conditionals, cohesion, complexity and behavior-focused tests. |
 | [solid-architecture-review](skills/solid-architecture-review/SKILL.md) | Review and refactor SOLID boundaries, dependency direction, extensibility and file organization. |
 | [web-review](skills/web-review/SKILL.md) | Review web changes for SEO, semantic HTML, accessibility and reusable components and behaviors. |
@@ -82,7 +82,14 @@ Chrome/Chromium; see the [document guide](skills/build-feature/modules/prd/GUIDE
 `draft-pr` prepares context and PR bodies locally with Python 3.10+ and Git, without third-party Python packages or connected trackers. It includes a default `PR.md` template and guidance to attach relevant technical diagrams
 and proactively capture changed visuals when straightforward; pass `--template` to use your own. Publishing requires an authenticated GitHub CLI (`gh`) or an available GitHub tool, plus user authorization.
 
-Instructions, metadata and examples are written in English. Agents should still use the user's requested language in conversation; the document renderer supports English and French.
+Instructions, metadata and shipped examples are maintained in English. Skill output
+follows the user's conversation language unless they explicitly request another one:
+questions, plans, PRDs, diagram explanations, reviews, PR descriptions and handoffs.
+Delegated agents receive that language explicitly. Code/schema identifiers stay exact;
+commits, branch names and Conventional PR titles remain in English. Explicit language
+requirements for a particular repository artifact or product UI remain applicable.
+The document renderer supports English and French UI labels; other-language prose uses
+an explicitly disclosed English UI fallback.
 
 ## Standalone review skills
 
@@ -119,7 +126,10 @@ The complete `security-audit` directory is vendored from Cloudflare at the revis
 [its attribution record](skills/security-audit/UPSTREAM.md), with the original
 [MIT license and copyright](skills/security-audit/LICENSE). Its upstream instructions,
 companions, schema, validators and tests are unchanged. The audit describes fixes and
-leaves audited source read-only. Full audit execution requires the sandbox and independent
+leaves audited source read-only. The original entrypoint is preserved as
+[UPSTREAM-SKILL.md](skills/security-audit/UPSTREAM-SKILL.md); the local `SKILL.md` adds
+conversation-language guidance and requires reading that upstream workflow. The vendor
+validator checks its original hash at the new path. Full audit execution requires the sandbox and independent
 verification capabilities specified upstream; missing capabilities must remain explicit.
 The imported CLI validators also require POSIX file-open protections unavailable in
 native Windows Node. Their full test suite runs in Linux CI; see the

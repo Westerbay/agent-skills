@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Use the user's conversation language for skill output, generated plans, PRDs, reviews,
+  PR descriptions and delegated reports. Preserve English Git names and exact technical
+  identifiers; select matching French/English document locales. Keep the Cloudflare
+  workflow unchanged behind a local language-aware entrypoint and verify its original hash.
+
 - Block delivery on missing, failed or blocked delivery checks, with explicit per-check
   user waivers and a separate acceptance stage. Bind review replies to the exact patch
   digest and select a general reviewer plus only relevant specialists.

@@ -6,6 +6,15 @@ IDs start with a letter and contain letters, digits, hyphens or underscores; ite
 unique across a document. Prose is plain text, with newlines for paragraphs. Do not encode
 HTML, CSS, layout, duplicated counters or a hand-maintained task graph in JSON.
 
+Choose the prose language from the user's conversation unless they explicitly request
+another language; do not copy the language of an example or infer it from repository code.
+Use it for titles, summaries, requirements, task goals, checks, risks, technical explanations,
+human QA and natural-language UML labels. Preserve schema keys, enum values, stable IDs,
+code/API names and commands. Set both source documents to `locale: "fr"` for French or
+`locale: "en"` for English, so the HTML controls match the prose. The renderer currently
+supports only these two UI locales: for another language, keep the requested prose and
+disclose the English UI fallback; do not invent a locale or claim full UI translation.
+
 Prose may contain inline LaTeX `\(...\)` or display LaTeX `\[...\]` / `$$...$$`.
 Escape backslashes in JSON strings, for example `"\\(\\frac{a}{b}\\)"`.
 The renderer displays formulas offline; code blocks and diagram source remain literal.

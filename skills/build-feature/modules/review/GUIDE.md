@@ -4,6 +4,12 @@ Review the exact cumulative change read-only, then route supported fixes to auth
 writers. This module works locally without another skill, hosting provider or agent API.
 Resolve `<review-dir>` as `<skill-dir>/modules/review`.
 
+Write finding titles, explanations, recommendations and summaries in the user's current
+conversation language unless they request another output language. Include that language
+in every reviewer assignment, including security specialists. Preserve schema keys/enums,
+patch identities, code symbols, paths and verbatim evidence; English templates do not
+change the language of free-text reply fields or the final report.
+
 In `build-feature`, review after all CODE work is integrated and checked, before delivery.
 Inspect cross-task simplification opportunities first; no useful refactor is a valid
 outcome, and unchanged snapshots can reuse relevant passing checks. Do not repeat a
