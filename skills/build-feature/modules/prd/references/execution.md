@@ -30,6 +30,11 @@ The helper never starts agents, edits code, creates Git commits or publishes req
 
 Use `task-context <prd.json> CODE-001 --plan <plan.json> --state <run.json>
 --out <context.json>` for each worker's requirements, owned scope and technical references.
+The excerpt includes source paths, PRD and plan digests, approved run evidence when
+`--state` is supplied, and feature framing. It does not verify that linked designs are
+accessible or that a worker read them. Follow the
+[dispatch contract](../../../references/implementation-orchestration.md#carry-the-approved-contract-into-each-assignment)
+to check coverage and pass the actual approved design references before implementation.
 Without state, this is a planning excerpt, not execution authority.
 
 Record each CODE task with `record-task <prd.json> CODE-001 --state <run.json>

@@ -79,8 +79,10 @@ and fingerprints in local run JSON. Never infer consent from silence or tool suc
 
 Follow [orchestration](references/implementation-orchestration.md). Dispatch a safe batch
 of dependency-ready tasks to separate subagents when supported and permitted; otherwise
-implement sequentially and disclose that limitation. Give each writer a bounded context,
-owned paths and a return contract. Only one writer owns a shared surface at a time.
+implement sequentially and disclose that limitation. Give each writer a verified task
+context with the approved UML, schemas and applicable UX/UI decisions, readable source
+references, owned paths and a return contract. Do not rely on inherited chat history.
+Only one writer owns a shared surface at a time.
 
 Each task follows the [development guide](modules/development/GUIDE.md): implement the
 behavior, keep the code clear, run targeted meaningful checks, and save an attributable

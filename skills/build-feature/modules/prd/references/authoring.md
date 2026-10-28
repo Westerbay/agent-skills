@@ -68,7 +68,13 @@ Avoid named patterns without need and keep decision prose brief.
 
 Mark cross-cutting constraints `global: true`. Link entry dependencies with `refs`.
 `task-context` includes global entries and the transitive references of the task and its
-prerequisites. Unresolved risks and top-level constraints are always retained.
+prerequisites, preserving their complete `body`, `code` and `diagram` content. Capture
+approved UX/UI decisions in the applicable `flow`, `contract` or `decision` entries,
+including exact design source/revision references in their body, and link them with
+`planRefs`. A link's external contents are not fetched or embedded by the helper; the
+coordinator must make required visuals readable to workers. Unresolved risks, top-level
+constraints and feature framing (summary, goals, users, exclusions and success metrics)
+are retained. No new entry kind or duplicate design document is required.
 No diagram init directives, frontmatter overrides or embedded HTML. The renderer owns
 Mermaid configuration, compiles SVG offline and caches by source plus renderer version.
 Read `examples/reader.tech-plan.json` only if needed.

@@ -32,6 +32,42 @@ test('task excerpt retains global and transitive technical contracts and rejects
   assert.throws(() => taskContext(doc, 'CODE-001'), /--plan/);
 });
 
+test('task context preserves product framing and complete relevant design contracts', () => {
+  const doc = fixture();
+  doc.goals = ['Keep the approved reading flow.'];
+  doc.users = ['Readers using a keyboard or screen reader.'];
+  doc.outOfScope = ['Redesigning navigation.'];
+  doc.successMetrics = ['All reading controls work offline.'];
+  doc.tasks.push({...doc.tasks[0], id: 'CODE-CONTRACT', title: 'Define reader contract',
+    dependsOn: [], planRefs: ['DEP-001'], scope: ['contracts/']});
+  doc.tasks[0].dependsOn = ['CODE-CONTRACT'];
+  const entry = (id, refs = [], global = false) => ({id, title: id, kind: 'contract', body: 'Contract', refs, global});
+  const ui = {...entry('UI-001'),
+    body: 'Use the approved layout in designs/reader-v2.png and restore focus after closing the panel.',
+    diagram: 'stateDiagram-v2\n  Closed --> Open: activate\n  Open --> Closed: Escape',
+    code: 'type PanelState = "open" | "closed";', example: 'Escape closes the panel without navigating.'};
+  const globalFlow = {...entry('FLOW-001'), diagram: 'sequenceDiagram\n  Reader->>Panel: open'};
+  const dependencyContract = {...entry('REUSE-001'), body: 'Reuse ReaderPanel from src/components/ReaderPanel.tsx.'};
+  const relevant = [entry('DEC-001', ['API-001']), entry('API-001', ['UI-001']), ui,
+    entry('GLOBAL-001', ['FLOW-001'], true), globalFlow,
+    entry('DEP-001', ['REUSE-001']), dependencyContract];
+  const plan = {schemaVersion: 1, kind: 'tech-plan', id: 'reader-plan', revision: '1',
+    locale: 'en', title: 'Plan', summary: 'Keep the approved reader design and shared contract.',
+    constraints: ['Offline'], entries: [...relevant, entry('UNRELATED-001')]};
+  const excerpt = JSON.parse(JSON.stringify(taskContext(doc, 'CODE-001', plan)));
+  assert.deepEqual(excerpt.document, {id: doc.id, revision: doc.revision, title: doc.title,
+    summary: doc.summary, goals: doc.goals, users: doc.users, outOfScope: doc.outOfScope,
+    successMetrics: doc.successMetrics});
+  assert.equal(excerpt.technicalPlan.summary, plan.summary);
+  assert.deepEqual(excerpt.technicalPlan.entries, relevant);
+  assert.deepEqual(excerpt.requirements, doc.requirements);
+  assert.deepEqual(excerpt.constraints, doc.constraints);
+  assert.deepEqual(excerpt.dependencies.map(item => item.id), ['CODE-CONTRACT']);
+  const minimal = JSON.parse(JSON.stringify(taskContext(fixture(), 'CODE-001', plan)));
+  assert.equal(Object.hasOwn(minimal.document, 'users'), false);
+  assert.equal(Object.hasOwn(minimal.document, 'outOfScope'), false);
+});
+
 test('unknown references and code disguised as human QA fail validation', () => {
   const doc = fixture();
   doc.tasks[0].requirementIds = ['FR-MISSING'];

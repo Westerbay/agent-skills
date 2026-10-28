@@ -21,7 +21,9 @@ the standalone review skills remain available for deeper, focused reviews.
 
 `build-feature` uses two approvals: scope (A), then one concise implementation plan (B)
 combining logic/UML, relevant reuse, acceptance and a task graph in one HTML. Independent
-CODE tasks run in parallel with exclusive write scopes and targeted validation. After all
+CODE tasks receive the linked approved UML, schemas and UX/UI references with their
+acceptance criteria, then run in parallel with exclusive write scopes and targeted
+conformance checks. Missing context is resolved before dependent work. After all
 tasks validate, one integrated simplification/review cycle applies accepted refactors;
 at most two review rounds cover the whole feature. Quality and web feed the quality
 dimension; architecture and security select full review. A focused SOLID design critique

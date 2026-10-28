@@ -26,18 +26,56 @@ finish. Inspect actual shared resources as well as path overlap: schema contract
 generated outputs, test databases and shared build steps may need coordination.
 Unknown/glob scopes serialize conservatively; use concrete files/subtrees for parallelism.
 
-Give each implementation worker:
+### Carry the approved contract into each assignment
 
-- `task-context`, task ID, behavior and acceptance IDs;
-- exact owned paths, excluded/shared surfaces and validated prerequisite outputs;
-- the absolute bundled development guide path and relevant references;
-- meaningful validation and any safe fixture responsibilities;
+Generate the excerpt with both approved sources and the current run record:
+
+```bash
+node <skill-dir>/modules/prd/scripts/prd.mjs task-context <feature>.prd.json CODE-001 --plan <feature>.tech-plan.json --state <feature>.run.json --out <local-scratch>/CODE-001.context.json
+```
+
+Inspect the excerpt before dispatch. It retains linked/global technical entries, including
+diagram source, but cannot discover a UX decision left only in chat or an unlinked mockup.
+Do not assume workers inherit the coordinator's conversation, attachments, working
+directory or authenticated design access. Pass a compact assignment containing:
+
+- the task ID, excerpt's absolute path, approved source paths/revisions/digests and the
+  exact repository/worktree root and code baseline;
+- behavior and acceptance IDs, applicable UML flows, API/data schemas and UX/UI decisions
+  through their plan entry IDs; include exact mockup/frame/section references and a
+  readable approved snapshot when needed, rather than a vague design URL;
+- exact owned paths, excluded/shared surfaces and validated prerequisite outputs, with
+  their actual code/checkpoint location rather than only a prerequisite task title;
+- applicable repository instructions, the absolute bundled development guide path and
+  relevant references, meaningful validation and any safe fixture responsibilities;
 - no unrelated cleanup, Git publication or edits outside ownership;
-- a return contract: patch/checkpoint, changed files, checks and unresolved risks.
+- a return contract: patch/checkpoint, changed files, acceptance/plan IDs mapped to actual
+  behavior and check evidence, plus deviations, unavailable checks and unresolved risks.
+
+Ensure referenced local planning/design files are readable from the worker's environment.
+For an isolated worktree, pass accessible absolute paths or a verified local copy of the
+same approved revision; do not commit private planning artifacts to transfer context.
+Keep the complete sources accessible for cross-task questions without dumping the whole
+conversation into every prompt.
+If an already-approved entry is missing from the excerpt, supply its exact reference
+directly in the assignment; do not rewrite approved sources just to repair transmission.
+
+Before editing, the worker reads the excerpt and applicable source/design references,
+briefly identifies the contract it will preserve and reports missing or conflicting
+inputs to the coordinator. This is a context check, not a new human approval gate.
+The coordinator resolves discoverable gaps; only materially undecided changes return
+to the affected gate. Do not invent a replacement layout, schema or interaction because
+an attachment is inaccessible. Independent work with sufficient context may continue.
+After an approved source revision changes, regenerate affected excerpts and redispatch
+them; do not accept outputs based on a superseded contract as current validation.
 
 The coordinator owns integration and shared-surface scheduling. Workers follow
 [development guidance](../modules/development/GUIDE.md), record `implemented`, run targeted
-checks, then record `validated`. A failed local check is fixed before validation.
+checks, then record `validated`. Compare the task's actual behavior with its referenced
+contracts and UI decisions as part of these checks; passing tests alone does not prove
+conformance. Exercise relevant UI states and viewports against the approved design when
+visual tooling is available, otherwise disclose the gap. A failed local check or an
+unapproved deviation is fixed before validation.
 There is no per-task specialist review, simplifier ceremony or PR publication here.
 Validated dependencies release implementation work, not delivery.
 
@@ -49,8 +87,9 @@ assignments; CODE tasks must not depend on post-delivery human acceptance.
 
 After every CODE task is validated:
 
-1. Combine their exact outputs, resolve integration issues within approved behavior,
-   and record feature phase `integrated` using `record-feature`.
+1. Combine their exact outputs and compare the assembled behavior with the approved
+   flows, schemas and UX/UI decisions, especially seams across tasks. Resolve integration
+   issues and unapproved drift, then record feature phase `integrated` using `record-feature`.
 2. Run the relevant combined behavior, type/build, integration and risk checks. Record
    actual check results and feature phase `validated`; report blocked checks honestly.
 3. Apply the [simplifier](simplifier.md) once to the combined feature. Give each justified
@@ -62,6 +101,10 @@ After every CODE task is validated:
    writers during capture, review and verification.
 6. Aggregate once and record feature phase `reviewed` once, not once per specialist or
    task. Triage supported findings against the approved contract.
+
+Give the simplifier, reviewers and correction writers the same approved source/design
+references used for implementation. Refactoring must preserve the agreed UX and contracts;
+check conformance again after integrated refactors within this existing review cycle.
 
 Use the feature's starting baseline, not the latest task patch. Keep snapshots immutable
 and label each result uniquely with fresh content hashes/patch digest. The review helper
